@@ -1,4 +1,4 @@
-**XSS Payloads**
+XSS Payloads
 
 <script>alert(window.origin)</script> 	Basic XSS Payload
 

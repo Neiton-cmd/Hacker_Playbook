@@ -1,0 +1,8 @@
+whoami  # what user currently logged up
+
+ss -nltp # list of services which is running in localhost
+
+
+
+
+

@@ -4,6 +4,12 @@ docker run --rm -p 3000:3000 bkimminich/juice-shop
 
 docker run hello-world
 
+tar -xvzf nameoffile.tar.gz
+
+tar -xvf nameoffile.tar
+
+
+
 
 
 

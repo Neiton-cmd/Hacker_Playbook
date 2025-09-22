@@ -1,4 +1,4 @@
-echo "10.10.11.35 ip/host" | sudo tee -a /etc/hosts
+echo "10.10.11.35 host" | sudo tee -a /etc/hosts
 crackmapexec smb IP --shares
 crackmapexec smb IP -u 'guest' -p '' --shares // avaliable shares in host
 smbclient //IP/DIR

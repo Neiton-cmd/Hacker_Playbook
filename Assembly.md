@@ -1,6 +1,6 @@
 ## Registers
 
-```‎bash
+
 Description 	                  64-bit Register (8-bytes) 	      8-bit Register (1-bytes
 Data
 Syscall Number/Return value 	          rax 	                              al
@@ -15,4 +15,7 @@ Pointer Registers
 Base Stack Pointer 	                    rbp 	                              bpl
 Current/Top Stack Pointer 	            rsp 	                              spl
 Instruction Pointer 'call only' 	      rip 	                              ipl
-```‎
+
+
+
+

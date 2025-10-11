@@ -111,20 +111,20 @@ xor 	Bitwise XOR (if bits are the same -> 0, if bits are different -> 1) 	xor ra
 
 ```bash
 mov rcx, x 	Sets loop (rcx) counter to x 	mov rcx, 3
-loop 	Jumps back to the start of loop until counter reaches 0 	loop exampleLoop
+loop 	      Jumps back to the start of loop until counter reaches 0 	loop exampleLoop
 ```
 
 ### Branching
 
 ```bash
 jmp 	Jumps to specified label, address, or location 	jmp loop
-jz 	Destination equal to Zero 	D = 0
+jz 	  Destination equal to Zero 	D = 0
 jnz 	Destination Not equal to Zero 	D != 0
-js 	Destination is Negative 	D < 0
+js 	  Destination is Negative 	D < 0
 jns 	Destination is Not Negative (i.e. 0 or positive) 	D >= 0
-jg 	Destination Greater than Source 	D > S
+jg 	  Destination Greater than Source 	D > S
 jge 	Destination Greater than or Equal Source 	D >= S
-jl 	Destination Less than Source 	D < S
+jl 	  Destination Less than Source 	D < S
 jle 	Destination Less than or Equal Source 	D <= S
 cmp 	Sets RFLAGS by subtracting second operand from first operand (i.e. first - second) 	cmp rax, rbx -> rax - rbx
 ```
@@ -157,10 +157,10 @@ man -s 3 printf 	# printf libc man page
 ### Command 	Description
 
 ```bash
-pwn asm 'push rax' -c 'amd64' 	# Instruction to shellcode
-pwn disasm '50' -c 'amd64' 	# Shellcode to instructions
+pwn asm 'push rax' -c 'amd64' 	  # Instruction to shellcode
+pwn disasm '50' -c 'amd64' 	      # Shellcode to instructions
 python3 shellcoder.py helloworld 	# Extract binary shellcode
-python3 loader.py '4831..0f05 	# Run shellcode
+python3 loader.py '4831..0f05 	  # Run shellcode
 python assembler.py '4831..0f05 	# Assemble shellcode into binary
 ```
 
@@ -168,7 +168,7 @@ python assembler.py '4831..0f05 	# Assemble shellcode into binary
 
 ```bash
 pwn shellcraft -l 'amd64.linux' 	# List available syscalls
-pwn shellcraft amd64.linux.sh 	# Generate syscalls shellcode
+pwn shellcraft amd64.linux.sh 	  # Generate syscalls shellcode
 pwn shellcraft amd64.linux.sh -r 	# Run syscalls shellcode
 ```
 

@@ -54,6 +54,11 @@ smbmap -H ip
 ```bash
 smbclient //ip/dir -U 'user' -c 'ls; get "text.txt"' # download file to your machine
 ```
+```bash
+ldapsearch -x -b "dc=baby,dc=vl" "(objectClass=user)" sAMAccountName -H ldap://BabyDC.baby.vl \
+| grep "^sAMAccountName:" | awk '{print $2}'
+```
+
 
 ## AD / user enumeration
 ```bash

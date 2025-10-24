@@ -21,3 +21,20 @@ INLANEFREIGHT.LOCAL/
 ├── CORP.INLANEFREIGHT.LOCAL
 └── DEV.INLANEFREIGHT.LOCAL
 ```
+
+```bash
+nslookup INLANEFREIGHT.LOCAL
+nslookup 172.16.6.5
+nslookup ACADEMY-EA-DC01
+```
+
+### Hash Protocol Comparison
+```bash
+NTLM  Random number  Domain Controller  MD4(UTF-16-LE(password))
+NTLMv1  MD4 hash, random number  Domain Controller
+NTLMv2 	MD4 hash, random number  Domain Controller
+Kerberos  Encrypted ticket using DES, MD5  Domain Controller/Key Distribution Center
+```
+
+
+

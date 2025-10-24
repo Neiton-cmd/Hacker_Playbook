@@ -7,6 +7,8 @@ docker ps # see containers
 docker compose up -d # run config file .yml you must be located in file .yml directory
 docker compose down # stop all docker labs
 docker system prune -f
+docker stop <container_id>
+
 ```
 # Zip with tar
 ```bash

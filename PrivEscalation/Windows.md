@@ -134,3 +134,69 @@ Get-SmbShare
 net view \\target
 crackmapexec smb <ip> -u '' -p ''  # if using CCE
 ```
+-----------------------------------------------------------------------------------------
+# Updating commands
+
+## Network
+```bash
+ipconfig /all
+arp -a
+route print
+```
+
+## Windows Defender Status
+```bash
+Get-MpComputerStatus
+Get-AppLockerPolicy -Effective | select -ExpandProperty RuleCollections
+Get-AppLockerPolicy -Local | Test-AppLockerPolicy -path C:\Windows\System32\cmd.exe -User Everyone
+```
+## Tasks that is running
+```bash
+tasklist /svc
+```
+## Environment Variables in system
+```bash
+set
+```
+## View Detailed Configuration Information
+```bash
+systeminfo
+wmic qfe # patches and updates
+Get-HotFix | ft -AutoSize # as previous but PowerShell
+wmic product get name # installed programs
+Get-WmiObject -Class Win32_Product |  select Name, Version # as previous but PowerShell
+```
+
+## Running processes
+```bash
+netstat -ano # TCP and UDP connections in localhost
+netstat -ano | findstr ":8080"
+```
+
+## Logged-In Users && Current User && User Privileges && Groups
+```bash
+query user # all logged-in users
+echo %USERNAME% # as whoami current user
+whoami /priv # current user privileges
+whoami /groups # current user group information
+net user # get all users in system
+net localgroup # get all groups in system
+net localgroup <group> # can be administrators used for checking details about a group
+net accounts # password policy and account info
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

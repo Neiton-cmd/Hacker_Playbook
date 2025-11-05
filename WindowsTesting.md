@@ -104,6 +104,8 @@ john pfx.john -wordlist:/usr/share/wordlists/rockyou.txt
 ## OpenSSL
 ```bash
 openssl pkcs12 -in <file>.pfx -nocerts -out key.pem -nodes # google .pfx type of file
+openssl pkcs12 -in <file>.pfx -nokeys -out cert.pem
+# after evil-winrm -c -k -S
 ```
 
 

@@ -1,3 +1,4 @@
+
 # Initial Enumeration
 ```bash
 `nslookup ns1.inlanefreight.com` # Used to query the domain name system and discover the IP address to domain name mapping of the target entered from a Linux-based host.

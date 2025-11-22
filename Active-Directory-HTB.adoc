@@ -1,0 +1,9 @@
+# Active-Directory Penetration Testing Process
+
+# Table of contents
+
+
+## Port scanning
+
+
+## Scenario without creds

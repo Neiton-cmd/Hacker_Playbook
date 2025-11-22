@@ -146,6 +146,12 @@ smbclient '//$target/$Share'  -U username
 smbclient '//$target/$Share' -N
 ```
 
+Take all files in Share
+
+```bash
+mget *
+```
+
 [[NTLM]]
 == NTLM Relay Attack
 

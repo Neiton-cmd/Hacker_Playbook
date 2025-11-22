@@ -9,9 +9,11 @@
 - <<creds, Scenario without creds and with creds>>
 - <<ASREPRoast, ASREPRoast>>
 - <<Kerberoasting, Kerberoasting>>
-- <<Smb Shares, Smb>>
+- <<Smb, SMB>>
 - <<NTLM, NTLM Relay Attack>>
 - <<Bloodhound, Bloodhound>>
+- <<perms, Permisions in AD>>
+  * <<generetic, GenereticWrite>>
 
 [[overview]]
 == Overview
@@ -96,7 +98,7 @@ nxc ldap $target -u 'username' -p '' --no-preauth-targets kerberoastable.list --
 More info about https://www.netexec.wiki/ldap-protocol/kerberoasting#kerberoasting[here]
 
 [[Smb]]
-== Smb Shares
+== SMB
 
 Enumerate *groups* , *users* via `smb`
 
@@ -165,6 +167,13 @@ bloodhound-cli
 ```
 
 `bloodhound-cli` starts bloodhound in *cli* , after upload all json files and start analyze
+
+[[perms]]
+== Permisions in AD
+
+[[generetic]]
+=== GenereticWrite
+
 
 
 

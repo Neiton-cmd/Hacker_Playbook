@@ -24,6 +24,7 @@
   * <<xfreerdp, XfreeRDP>>
 - <<database, Databases>>
 - <<forwarding, Port-Forwarding and Sliver C2>>
+- <<privesc, Privilage Escalation>>
 
 [[overview]]
 == Overview
@@ -458,7 +459,10 @@ $session_id looks like `5b4640a8`
 Sliver C2 configured in proxy `SOCKS5` so need to change a `/etc/proxychains.conf` to `SOCKS5` in port `1081`
 
 
+[[privesc]]
+== Privilage Escalation
 
+Privilage Escalation is the same as in standarlone machines more info in this https://github.com/Neiton-cmd/PentestCheatList/blob/main/PrivEscalation/Windows.md[repo]
 
 
 

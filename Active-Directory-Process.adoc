@@ -9,7 +9,7 @@
 - <<creds, Scenario without creds and with creds>>
 - <<ASREPRoast, ASREPRoast>>
 - <<Kerberoasting, Kerberoasting>>
-- <<Smb, SMB>>
+- <<SMB, SMB>>
 - <<NTLM, NTLM Relay Attack>>
 - <<Bloodhound, Bloodhound>>
 - <<perms, Permisions in AD>>
@@ -115,7 +115,7 @@ no-preauth-targets kerberoastable.list --kerberoasting output.txt
 More info about https://www.nebloodyAD --host "10.1.107.118" -d 'dc01.hacksmarter.local' -u  'yorinobu' -p  'FuckPass!@' set password 'soulkiller.svc' 'FuckPass!@!@@'
 texec.wiki/ldap-protocol/kerberoasting#kerberoasting[here]
 
-[[Smb]]
+[[SMB]]
 == SMB
 
 Enumerate *groups* , *users* via `smb`

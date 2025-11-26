@@ -473,6 +473,10 @@ Sliver C2 configured in proxy `SOCKS5` so need to change a `/etc/proxychains.con
 
 Privilage Escalation is the same as in standarlone machines more info in this https://github.com/Neiton-cmd/PentestCheatList/blob/main/PrivEscalation/Windows.md[repo]
 
+Certificates https://posts.specterops.io/adcs-attack-paths-in-bloodhound-part-2-ac7f925d1547[here]
+
+
+
 
 
 

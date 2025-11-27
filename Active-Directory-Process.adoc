@@ -96,8 +96,7 @@ More info about https://www.netexec.wiki/ldap-protocol/asreproast[here]
 [[Kerberoasting]]
 == Kerberoasting
 
-Kerberoasting is an attack against Active Directory where an attacker requests Kerberos service tickets for service accounts and then cracks them offline to obtain their passwords. It works because the tickets are encrypted with the service account’s password hash, which may be weak or unchanged for long periods.
-hashcat hash.soul.txt  /home/kali/woREMOTE MANAGEMENT USERSrdlists/passwords/rockyou.txt     
+Kerberoasting is an attack against Active Directory where an attacker requests Kerberos service tickets for service accounts and then cracks them offline to obtain their passwords. It works because the tickets are encrypted with the service account’s password hash, which may be weak or unchanged for long periods.   
 Also can be done via tool `nxc` netexec
 
 ```bash

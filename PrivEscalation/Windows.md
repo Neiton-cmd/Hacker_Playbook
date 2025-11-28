@@ -310,6 +310,18 @@ sc.exe stop  VMTools
 sc.exe start VMTools
 ```
 
+## SeIncreasePrivilege
+
+Used GodPotato tool with python3
+
+```bash
+.\GodPotato-NET4.exe
+
+
+
+
+
+
 
 
 

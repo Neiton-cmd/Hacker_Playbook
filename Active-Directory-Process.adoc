@@ -445,7 +445,15 @@ xfreerdp /v:ip   /u:user   /p:'password'  /w:1920 /h:1080 /fonts /smart-sizing
 
 If enumerated a database in Active Directory , attacker can connect to it by tool `impacket-mssqlclient`. Also if database is running at `localhost` , must do `Port-Forwarding`. Anouther thing is `proxychains` can be configured in `/etc/proxychains.conf` next section will be about this.
 
-Connect to database
+Connect to database without pivoting
+
+```bash
+impacket-mssqlclient 'domain'/'user':'password@@'@127.0.0.1 -windows-auth
+```
+
+It's also depens what creds you have if it windows or database creds if database creds delete `-windows-auth` flag
+
+If connection is by `SOCKS5` or some other , pivoting database in localhost
 
 ```bash
 proxychains4 -q impacket-mssqlclient 'domain'/'user':'password@@'@127.0.0.1 -windows-auth

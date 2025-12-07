@@ -1,2 +1,160 @@
+# Linux Privilage Escalation
+
+:toc:
+:toclevels: 3
+
+== Table of Contents
+- <<enviroment,Enviroment enumeration>>
+- <<cred, Cred Hunting>>
+- <<path, PATH abusing>>
+- <<perms, Special Perms>>
+- <<sudo, Sudo>>
+- <<groups, Priv Groups>>
+
+
+
+
+
+
+
+
+[[enviroment]]
+== Enviroment enumeration
+
+```bash
+whoami
+id
+hostname
+ifconfig
+```
+
+Some info about *OS*
+
+```bash
+cat /etc/os-release
+uname -a
+```
+
+
+
+Environment variables
+
+```bash
+env
+```
+
+Users enumeration
+
+```bash
+ls -la /home
+cat /etc/passwd | cut -f1 -d:
+```
+
+All hidden files && dirs
+
+```bash
+find / -type f -name ".*" -exec ls -l {} \; 2>/dev/null | grep username
+#
+find / -type d -name ".*" -ls 2>/dev/null
+```
+
+GTFO bins enumeration copy-paste
+
+```bash
+for i in $(curl -s https://gtfobins.github.io/ | html2text | cut -d" " -f1 | sed '/^[[:space:]]*$/d');do if grep -q "$i" installed_pkgs.list;then echo "Check GTFO for: $i";fi;done
+```
+
+Some configuration files
+
+```bash
+find / -type f \( -name *.conf -o -name *.config \) -exec ls -l {} \; 2>/dev/null
+```
+
+[[cred]]
+== Cred Hunting
+
+Conf files without `proc` directory
+
+```bash
+find / ! -path "*/proc/*" -iname "*config*" -type f 2>/dev/null
+```
+
+*SSH* keys
+
+```bash
+ls -la ~/.ssh
+```
+
+Search database
+
+```bash
+find / -type f -name *.db 2>/dev/null
+```
+
+[[path]]
+== PATH abusing
+
+path abusing - do when binary file which runned as `root` or more prilileged user and don't specify a full path to anouther binary for exp:`python3`
+
+Enumerate path
+
+```bash
+echo $PATH
+```
+
+Adding new path by variable
+
+```bash
+PATH=/tmp:${PATH}
+export PATH
+echo $PATH
+```
+
+After create malicious exp: `python3` with reverse shell in `/tmp` directory
+
+[[perms]]
+== Special Perms
+
+*setuid* -  permission can allow a user to execute a program or script with the permissions of another user
+
+```bash
+find / -user root -perm -4000 -exec ls -ldb {} \; 2>/dev/null
+```
+
+*setgid* - allows us to run binaries as if we were part of the group
+
+```bash
+find / -user root -perm -6000 -exec ls -ldb {} \; 2>/dev/null
+```
+
+
+[[sudo]]
+== Sudo
+
+Check if user can run binaries as root
+
+```bash
+sudo -l
+
+(root) NOPASSWD: /usr/bin/openssl
+```
+
+After enumerate `openssl` by *GTFOBins* or google it
+
+```bash
+openssl --help
+#
+man openssl
+```
+
+[[gpoups]]
+== PrivGroups
+
+Talking about *LXC / LXD* . LDX simmular to *Docker*
+
+
+
+
+
 
 

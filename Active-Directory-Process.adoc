@@ -137,6 +137,8 @@ impacket-ticketer -spn MSSQLSvc/breachdc.breach.vl \
 -user-id 500 Administrator
 ```
 
+
+
 It's a command that i used in htb machine to generate *Kerberos* ticket as Administrator to `MSSQL` service
 
 `-spn MSSQLSvc/breachdc.breach.vl` -> The Kerberos service you are creating a ticket for.
@@ -150,6 +152,43 @@ It's a command that i used in htb machine to generate *Kerberos* ticket as Admin
 `-domain breach.vl` -> The Active Directory domain name.
 
 `-user-id 500` -> The RID of the user (500 = built-in Administrator).
+
+
+If nessesary to do auth with `Kerberos Authentication` tool `impacket-getTGT` returns a `<user>.ccache` file
+requirements: Target username and password
+
+```bash
+impacket-getTGT  domain/'username':'password'
+```
+
+Then when it's needed to use kerberos auth for any command , that means that nxc smb can be replaced
+
+```bash
+KRB5CCNAME=user.ccache nxc smb ...
+```
+
+If will be a problem with connection , realms configure /etc/krb5.conf
+
+```bash
+[libdefaults]
+	default_realm = FRIZZ.HTB
+	[realms]
+	FRIZZ.HTB = {
+	kdc = frizzdc.frizz.htb
+	admin_server = frizzdc.frizz.htb
+	}
+	[domain_realm]
+	.frizz.htb = FRIZZ.HTB
+	frizz.htb = FRIZZ.HTB
+```
+
+machine example TheFrizz HTB
+
+Also for each kerberos auth must be a same time with target machine
+
+```bash
+sudo ntpdate <target_ip>
+```
 
 [[SMB]]
 == SMB

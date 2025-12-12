@@ -191,6 +191,15 @@ If will be a problem with connection , realms configure /etc/krb5.conf
 
 machine example TheFrizz HTB
 
+Anouther way to configure '/etc/krb5.conf' correctly it's add by 'netexec'
+
+```bash
+nxc smb dc.domain -u username -p password --generate-krb5-file name.krb5
+
+sudo cp name.krb5 /etc/krb5.conf
+```
+
+
 Also for each kerberos auth must be a same time with target machine
 
 ```bash

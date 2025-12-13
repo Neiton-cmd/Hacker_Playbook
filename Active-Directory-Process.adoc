@@ -286,9 +286,7 @@ sudo responder -I tun0
 
 When `responder` started craft `phish-link`
 
-```bash
-certipy-ad auth -pfx 'the_emperor.pfx' -dc-ip 10.1.107.118
-```
+
 
 
 ```bash

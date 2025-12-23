@@ -468,7 +468,7 @@ Can be logged as targed user to system when a password is strong or some service
 ```bash
 pywhisker -d domain -u "username" -p "password" --target "target_object" --action "list"
 ```
- DEV             READ       
+    
 2.Add *KeyCredentialLink* to target user in AD , it is doing because after taking *Kerberos TGT* as a target user
 
 ```bash

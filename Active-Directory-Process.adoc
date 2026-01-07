@@ -997,6 +997,8 @@ Find if a user has a delegation privilege by `whoami /all`
 
 after by impacket find maybe delegation already exists 
 
+Also it's find info about users and computers which has a `TRUSTED_FOR_DELEGATION` parametr
+
 Delegations divides into 3 types 
 
 === Unconstrained delegations (KUD) 

@@ -35,6 +35,7 @@
 - <<database, Databases>>
 - <<forwarding, Port-Forwarding and Sliver C2>>
 - <<ssh, SSH>>
+- <<Delegations, Delegations>>
 - <<privesc, Privilage Escalation>>
   * <<backup, SeBackupPrivilege>>
   * <<dpapi,  DPAPI secrets>>
@@ -988,6 +989,29 @@ Download a file from `ssh` connection
 ```bash
 scp -P 22 ./SharpGPOAbuse.exe m.schoolbus@frizz.htb:"C:/PATH/TO/FILE/"
 ```
+
+[[Delegations]]
+== Delegations
+
+Find if a user has a delegation privilege by `whoami /all`
+
+after by impacket find maybe delegation already exists 
+
+Delegations divides into 3 types 
+
+=== Unconstrained delegations (KUD) 
+
+1.Add a DNS record for the SPN's host - tool `dnstool` python
+
+2.Add a SPN - tool `addSPN` python
+
+The target servise can be choosed a `cifs` as a File Manager
+
+3.Start kerberos listener in our interface - tool `krbrelayx` python
+
+4.Trigger the target user to log into our service - tool `PetitPotam` and others
+
+This exploitation can be donned by `nxc` modules
 
 
 

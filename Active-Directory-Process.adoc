@@ -450,6 +450,12 @@ bloodhound-cli
 
 `bloodhound-cli` starts bloodhound in *cli* , after upload all json files and start analyze
 
+If Remote Management exist 
+
+```bash
+SharpHound.exe
+```
+
 [[shadowcreds]]
 == ShadowCreds
 
@@ -462,13 +468,6 @@ certipy-ad -debug shadow auto -u svc-alfresco@htb.local -p s3rvice -account targ
 [[perms]]
 == Permisions in AD
 
-```bash
-bloodhound-python -d 'htb.local' -u svc-alfresco -p s3rvice -c all -ns 10.10.10.10
-```
-
-```bash
-SharpHound.exe
-```
 
 Perms which can be enumerated by tool `bloodhound`
 

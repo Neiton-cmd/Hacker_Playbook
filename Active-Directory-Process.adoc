@@ -14,6 +14,7 @@
 - <<NFS, NFS>>
 - <<nats, NATS>>
 - <<NTLM, NTLM Relay Attack>>
+- <<Backups, Backups>>
 - <<Bloodhound, Bloodhound>>
 - <<perms, Permisions in AD>>
   * <<generetic, GenereticAll>>
@@ -295,6 +296,18 @@ Check all users by smb and write them to file
 nxc smb domain -u username -p 'password' --rid-brute | grep -iE 'SidTypeUser' | grep -viE 'WINDOWS|\$' | awk '{print $6}' | awk -F'\\' '{print $2}' | tee usernames.txt
 ```
 
+Auth with kerberos ticket without username and password
+
+```bash
+nxc smb dc.domain  --use-kcache # -k optional
+```
+
+If exists some service accounts possible that their password is written in clear-text
+
+```bash
+nxc smb domain -u '' -p '' --users
+```
+
 [[NFS]]
 == NFS
 
@@ -394,6 +407,21 @@ Right part of hash is always returned but Left part not always so
 
 *LM* null hash `aad3b435b51404eeaad3b435b51404ee`
 
+
+[[Backups]]
+== Backups
+
+If obtained some backups of system with files extension *.wim* possible to dump secrets
+
+1.Mount system backup
+
+```bash
+sudo wimmount AWSJPWK0222-01.wim 1 /mnt/wim --readonly
+```
+
+2.Then as root find sam and system
+
+3.Dump secrets as in SeBackupPrivilege section
 
 [[Bloodhound]]
 == Bloodhound
@@ -1181,6 +1209,12 @@ Can be identified by
 get-process # enumerate process runned on dc
 
 qwinsta # what users is logged in
+```
+
+Other way with tool *RunasCs.exe* which is more easy
+
+```bash
+Runascs.exe x x "qwinsta *" -l 9
 ```
 
 Some example of output

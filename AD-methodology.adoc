@@ -1,0 +1,75 @@
+Active Directory methodology file
+
+Start
+
+Port Scanning ->
+
+1.SMB 
+
+auth - null/guest/start_creds
+
+shares - (sysvol netlogon ipc$) standard but sometimes exists sensitive info
+
+users/computers/groups
+
+2.ldap
+
+kerberoasting 
+
+if no creds asreproasting
+
+3.NFS
+
+mount 
+
+backups 
+
+sensitive files
+
+Creds
+
+password reuse 
+
+servise accounts - maybe the same password who owns them
+
+if same user in AD like john and john_adm check dpapi
+
+files 
+
+memory
+
+services
+
+backups
+
+shares
+
+Pre-created computers -> may have a same password as SPN
+
+Computers
+
+Who has a session in computer
+
+cross-session 
+
+non-standart port can be pivoted
+
+LAPS
+
+delegations
+
+In bloodhound search a user which have Remote access
+Try to search path to him
+
+get object
+
+
+
+
+
+
+
+
+
+
+

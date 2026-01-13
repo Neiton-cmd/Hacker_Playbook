@@ -4,13 +4,14 @@ Active Directory methodology file
 :toclevels: 3
 
 == Table of Contents
+- <<Start, Start>>
+- <<Creds, Creds>>
+[[Start]]
+== Start
 
+Port Scanning -> what possible entries
 
-Start
-
-Port Scanning ->
-
-1.SMB 
+=== 1.SMB 
 
 auth - null/guest/start_creds
 
@@ -18,21 +19,21 @@ shares - (sysvol netlogon ipc$) standard but sometimes exists sensitive info
 
 users/computers/groups
 
-2.ldap
+=== 2.ldap
 
 kerberoasting 
 
 if no creds asreproasting
 
-3.NFS
+=== 3.NFS
 
 mount 
 
 backups 
 
 sensitive files
-
-Creds
+[[Creds]]
+== Creds
 
 password reuse 
 

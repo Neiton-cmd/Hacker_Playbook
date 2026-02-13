@@ -1,0 +1,51 @@
+Power Shell for Red-Team 
+
+:toc:
+:toclevels: 3
+
+== Table of Contents
+- <<Basics, Basics>>
+- <<Security and Detection, Security and Detection>>
+
+
+[[Basics]]
+== Basics
+
+Search running services in cumputer
+
+```bash
+Get-Service | Where-Object { $_.Status -eq "Running" }
+```
+
+List all names of services
+
+```bash
+net start
+```
+
+List of processes 
+
+```bash
+Get-Process
+```
+
+List open ports
+
+```bash
+netstat.ano
+```
+
+Search files which constain a string
+
+```bash
+findstr /si 'password' C:\*
+```
+
+
+
+[[Security and Detection]]
+== Security and Detection
+
+
+
+

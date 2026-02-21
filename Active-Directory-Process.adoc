@@ -44,7 +44,7 @@
   * <<dpapi,  DPAPI secrets>>
   * <<delegation, SeEnableDelegationPrivilege>>
   * <<cross-session, Cross-Session>>
-  * <<Credential Dumping, Credential Dumping>>
+  * <<Credential_Dumping, Credential Dumping>>
   * <<ToSystem, ToSystem>>
 - <<post-exploatation, post-exploatation>>
 
@@ -1310,7 +1310,7 @@ Run `RemotePotato0.exe` in target machine
 ./RemotePotato0.exe -m 2 -s 1 -x local_ip
 ```
 
-[[Credential Dumping]]
+[[Credential_Dumping]]
 == Credential Dumping
 
 For credential dumping from system is used mimikatz or LaZagne.exe, i use mimikatz for dumping machine creds and LaZagne users' 

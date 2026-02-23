@@ -1528,9 +1528,27 @@ If we have only smb share access with admin privileges we can dump `ntds.dit` fi
 impacket-secretsdump domain.htb/'Administrator'@dc.domain.htb -dc-ip 10.10.10.10 -target-ip 10.10.10.10 -use-vss -k -no-pass
 ```
 
+When you compromise some machine mostly working in linux hosts you can dump network connections 
 
+Check connections 
 
+```bash
+arp -an
+```
 
+Start a `tcpdump` listener and grap for 5-10 minutes
+
+```bash
+tcpdump -w nix01.cap "22" -v
+```
+
+Then open with `wireshark`
+
+```bash
+wireshark -r WS-01_PktMon.pcap
+```
+
+You need to find moslty some auth packet to catch cleartext creds or hashes. It's working with all `.pcap` files 
 
 
 

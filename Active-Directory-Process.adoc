@@ -7,6 +7,7 @@
 - <<overview,Overview>>
 - <<ports, Port Scanning>>
 - <<creds, Scenario without creds and with creds>>
+- <<phish, Phishing>>
 - <<ASREPRoast, ASREPRoast>>
 - <<Kerberoasting, Kerberoasting>>
 - <<Kerberos, Kerberos tickets>>

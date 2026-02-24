@@ -1072,6 +1072,19 @@ use_link "DC02.darkzero.ext"
 ```
 
 
+Userfull `msfconsole` modules for enumeration `MSSQL`. Users enum in domain , reverse shell crafting , `enable_xp_cmdshell` , database dumping (Non-default) , dumping users hashes
+
+```bash 
+use auxiliary/admin/mssql/mssql_sql 
+use auxiliary/admin/mssql/mssql_enum
+use auxiliary/admin/mssql/mssql_enum_sql_login
+use auxiliary/admin/mssql/mssql_findandsampledata
+use auxiliary/scanner/mssql/mssql_hashdump
+use exploit/windows/mssql/mssql_payload
+use auxiliary/admin/mssql/mssql_escalate_execute_as
+```
+
+
 [[forwarding]]
 == Port-Forwarding and Sliver C2
 

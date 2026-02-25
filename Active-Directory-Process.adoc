@@ -1251,27 +1251,25 @@ scp -P 22 ./SharpGPOAbuse.exe m.schoolbus@frizz.htb:"C:/PATH/TO/FILE/"
 [[Delegations]]
 == Delegations
 
-Find if a user has a delegation privilege by `whoami /all`
+**Unconstrained**
 
-after by impacket find maybe delegation already exists 
+If an account (user or computer), with unconstrained delegations privileges, is compromised, an attacker must wait for a privileged user to authenticate on it (or force it) using Kerberos. The attacker service will receive an ST (service ticket) containing the user's TGT. That TGT will be used by the service as a proof of identity to obtain access to a target service as the target user. Alternatively, the TGT can be used with S4U2self abuse in order to gain local admin privileges over the TGT's owner. There is the same as in `SeEnableDelegationPrivilege` in part of `Unconstrained` delegation if user has permision in WinRM or ACL it doent's matter. With obtained ST ticket you can do everything that can do compromised user log with `evil-winrm` for example. Target account must have an attribute `TRUSTED_FOR_DELEGATION`. Think if you can modify it.
 
-Also it's find info about users and computers which has a `TRUSTED_FOR_DELEGATION` parametr
+**Constrained**
 
-Delegations divides into 3 types 
+If a service account, configured with constrained delegation to another service, is compromised, an attacker can impersonate any user (e.g. domain admin, except users protected against delegation) in the environment to access another service the initial one can delegate to. There is the same as  `SeEnableDelegationPrivilege` part of `Constrained`. Always check your opportunities with delegation i mean that check what computers you control , are you allowed to delegate over DC use an `impacket-findDelegation` for enumeration. Target must have attribute `TRUSTED_TO_AUTH_FOR_DELEGATION`. Think if you can modify it.
 
-=== Unconstrained delegations (KUD) 
+**Resource-based constrained**
 
-1.Add a DNS record for the SPN's host - tool `dnstool` python
+If an account, having the capability to edit the msDS-AllowedToActOnBehalfOfOtherIdentity attribute of another object (e.g. the GenericWrite ACE), is compromised, an attacker can use it populate that attribute, hence configuring that object for RBCD.For this attack needed a account which has `SPN` it can be computer or user account , Account with has a `sAMAccountName` mostly computer accounts. Attribute `msDS-AllowedToActOnBehalfOfOtherIdentity`
 
-2.Add a SPN - tool `addSPN` python
+If a computer account has a privilege to delegate over `DC` you can request a ticket for any user in domain (which can be delegated)
 
-The target servise can be choosed a `cifs` as a File Manager
+```bash
+impacket-getST -spn 'cifs/dc01.vintage.htb' -altservice 'HTTP/dc01.vintage.htb' -impersonate L.BIANCHI_ADM -dc-ip 'dc01.vintage.htb' 'vintage.htb/fs01$:fs01'
+```
 
-3.Start kerberos listener in our interface - tool `krbrelayx` python
-
-4.Trigger the target user to log into our service - tool `PetitPotam` and others
-
-This exploitation can be donned by `nxc` modules
+If you don't have this scenario think about which computer account i control? Can i add it a privileges? 
 
 
 

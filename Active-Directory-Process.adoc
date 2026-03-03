@@ -51,6 +51,7 @@
   * <<ToSystem, ToSystem>>
 - <<amsi, AMSI>>
 - <<post-exploatation, post-exploatation>>
+- <<stuck, Stucked>>
 
 [[overview]]
 == Overview
@@ -1664,7 +1665,18 @@ You need to find moslty some auth packet to catch cleartext creds or hashes. It'
 
 
 
+[[stuck]]
+== Stuck
 
+This section is about **If i got stuck** in `Active Directory` environment. It is a preparation notes to `CRTP` exam.
+
+Start `bloodhound` again sometimes it can lie check for `ACL`'s . More i did enumeration more changes to pass over a `DC`  
+
+Use `impacket` or other usefull tools for hacking instead of PowerShell and `.exe` it's because a malicious actions are blocked by `Defender` and `AMSI` 
+
+Think more easilly don't try to invent something very inteligence it's about logic and abusing misconfigurations
+
+Do my own notes write all what i did during an exam 
 
 
 

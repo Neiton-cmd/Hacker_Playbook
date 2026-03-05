@@ -1678,7 +1678,9 @@ Think more easilly don't try to invent something very inteligence it's about log
 
 Do my own notes write all what i did during an exam 
 
+If i got a command execution in target machine always try to dump credentials
 
+Check again a LDAP maybe bloodhound didn't catch info
 
 
 

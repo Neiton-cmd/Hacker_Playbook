@@ -1,5 +1,7 @@
 # Active-Directory Penetration Testing Process
 
+## Linux based
+
 :toc:
 :toclevels: 3
 

@@ -1687,7 +1687,7 @@ If i got a command execution in target machine always try to dump credentials
 
 Check again a LDAP maybe bloodhound didn't catch info
 
-
+new versions of SharpHound.exe collects information better than bloodhound python
 
 
 

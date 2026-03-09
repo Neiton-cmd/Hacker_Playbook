@@ -436,6 +436,9 @@ Right part of hash is always returned but Left part not always so
 
 *LM* null hash `aad3b435b51404eeaad3b435b51404ee`
 
+Second part of NTLM relay attack it is trigger target computer to auth to domain controller throught our listener this attack named as Man-In-The-Middle
+ attacks it's a god practice like PetitPotam so can be trigged by netexec module coerse_plus
+
 
 [[Backups]]
 == Backups

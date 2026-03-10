@@ -164,10 +164,9 @@ Anouther trick about asrep-roasting it is if we got a user who doesn't require p
 impacket-GetUserSPNs rebound.htb/  -no-preauth jjones -usersfile usernames.txt -dc-host 10.129.232.31
 ```
 
+Where jjones not requieres preauth and usernames.txt it's all users in domain
+
 Requires new versions of `impacket`
-
-
-
 
 [[Kerberoasting]]
 == Kerberoasting

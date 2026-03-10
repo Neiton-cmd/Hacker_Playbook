@@ -36,6 +36,7 @@
   * <<john, John>>
 - <<templates, Vulnerable Certificate Templates>>
 - <<OpenSSL,OpenSSL>>
+- <<deleted, Deleted Object Recovery>>
 - <<rm, Remote Managment>>
   * <<evil, Evil-Winrm>>
   * <<xfreerdp, XfreeRDP>>
@@ -981,6 +982,28 @@ openssl rsa -in baker.key -out baker-decrypted.key
 ```
 
 Check if certificate is valid .pfx by `certipy-ad auth`
+
+[[deleted]]
+== Deleted Object Recovery
+
+If we see in bloodhound a unknown SID which has interesing permissions for us we can try to recover this Deleted object
+
+See what objects is contained as `Deleted Objects` container
+
+```bash
+Get-ADObject -Filter 'isDeleted -eq $true -and objectClass -eq "user"' -IncludeDeletedObjects -Properties *
+```
+
+```bash
+Get-ADObject -Filter 'isDeleted -eq $true -and objectClass -eq "user"' -IncludeDeletedObjects -Properties *
+Restore-ADObject -Identity 938182c3-bf0b-410a-9aaa-45c8e1a02ebf
+```
+
+Restore object
+
+```bash
+Restore-ADObject -Identity 938182c3-bf0b-410a-9aaa-45c8e1a02ebf
+```
 
 
 [[rm]]

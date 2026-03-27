@@ -2102,6 +2102,113 @@ Check again a LDAP maybe bloodhound didn't catch info
 
 new versions of SharpHound.exe collects information better than bloodhound python
 
+List what to check
+
+Information gathering LDAP to bloodhound GUI
+
+```bash
+rusthound
+bloodhound-python
+SharpHound.exe
+SharpHound.ps1
+```
+
+Local priv esc
+
+```bash
+whoami /all
+netstat -ano | findstr TCP
+winPEASany.exe
+PowerUp.ps1
+```
+
+domain
+
+```bash
+vuln templates 
+certipy-ad
+Certify.exe
+AS-REP roasting 
+Kerberoasting
+Shortest-path to domain admins
+shares
+-M coerse_plus
+SafetyKatz.exe
+impacket-findDelegation
+ACL
+bloodyad get writable
+Who has WinRM
+MYSSQL?
+cross-session
+Is it neccessary to avoid Defender
+```
+
+Good questions to move forward
+
+Who has WinRM on target?
+
+What can i do with current privileges?
+
+What is shortest path to Domain Admin and how dive into path?
+
+If i dump machine secrets i will grap what i want?
+
+How i can get a new user with higher privileges?
+
+How i can move to other domain?
+
+I am sure that i enumerate all?
+
+What i not use?
+
+Where i am local admin or have a hight privileges can i move forward with that?
+
+I check all domain computers?
+
+Should i restart enum , maybe i don't see something?
+
+I take all creds what i can?
+
+I check files , configs , memory , command history?
+
+Exists users which looks interesting but i don't try them?
+
+Can i controll some object in AD , if yes what i can do with that?
+
+I check ADCS , is there vulnerable template?
+
+I am sure that i dump all from target machine?
+
+What i find but ignore?
+
+What looks like unreal but can be key?
+
+I look at side path not only at shortest?
+
+What is mine next step to new user , machine , DC , i moving or stay?
+
+Rule 
+
+If i staying more than 45 minutes i go around my questions. If i don't give an answer --- take a pause for smoking 
+
+I thinking or just clicking a commands?
+
+I check anouther path?
+
+I return to enumeration?
+
+What credentials i didn't use yet?
+
+New user --- New path
+
+
+
+
+
+
+
+
+
 
 
 

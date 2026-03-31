@@ -59,7 +59,7 @@
 - <<av, AV evasion>>
 - <<trust, Domain Trusts>>
 - <<tickets,Golden,Silver,Diamond tickets generation>>
-- <<sliver, SLiver C2>>
+- <<sliver, Sliver C2>>
 
 
 [[overview]]

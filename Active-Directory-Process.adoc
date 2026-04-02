@@ -1954,6 +1954,13 @@ wireshark -r WS-01_PktMon.pcap
 
 You need to find moslty some auth packet to catch cleartext creds or hashes. It's working with all `.pcap` files 
 
+
+Show and Resolve IP of all computers in Domain
+
+```bash
+impacket-GetADComputers -hashes ':5bdd6a33efe43f0000e3b2435579aa53' domain.local/Administrator -no-pass -dc-ip 10.10.10.10 -resolveIP
+```
+
 [[av]]
 == AV evasion
 

